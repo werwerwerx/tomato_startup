@@ -1,8 +1,8 @@
 import type { Metadata } from "next";
 import { Comfortaa } from "next/font/google";
 import "./globals.css";
-import { HeaderWidget } from "@/components/widjets/header-widget";
-
+import { Header } from "@/shared/components/header";
+import Logo from "@/public/assets/logo.png";
 export const metadata: Metadata = {
   title: "Tomato e-commerce",
   description: "This is a site maked just for portfolio",
@@ -24,7 +24,7 @@ export default function RootLayout({
       <body
         className={`${comfortaaFont.className} font-sans text-foreground bg-background`}
       >
-        <HeaderWidget />
+        <Header />
         {children}
       </body>
     </html>
