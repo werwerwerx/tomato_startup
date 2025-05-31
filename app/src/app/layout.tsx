@@ -1,8 +1,7 @@
 import type { Metadata } from "next";
 import { Comfortaa } from "next/font/google";
 import "./globals.css";
-import { Header } from "@/shared/components/header";
-import Logo from "@/public/assets/logo.png";
+import { Header } from "@/app/header";
 export const metadata: Metadata = {
   title: "Tomato e-commerce",
   description: "This is a site maked just for portfolio",
@@ -20,9 +19,9 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en">
+    <html lang="en" className="overflow-x-hidden">
       <body
-        className={`${comfortaaFont.className} font-sans text-foreground bg-background`}
+        className={`${comfortaaFont.className} font-sans overflow-x-hidden text-foreground bg-background`}
       >
         <Header />
         {children}
