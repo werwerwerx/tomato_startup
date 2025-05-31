@@ -250,7 +250,7 @@ const Container = ({
 }: HTMLAttributes<HTMLDivElement>) => (
   <header
     className={cn(
-      "flex w-screen items-center justify-center border-b px-2 shadow-2xl",
+      "flex w-screen items-center justify-center border-b px-2 shadow-neutral-400/5 shadow-lg",
       className,
     )}
     {...props}

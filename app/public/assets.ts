@@ -10,6 +10,8 @@ import menu_5 from './menu_5.png'
 import menu_6 from './menu_6.png'
 import menu_7 from './menu_7.png'
 import menu_8 from './menu_8.png'
+import heading2 from './heading2.webp'
+import heading3 from './heading3.webp'
 
 import food_1 from './food_1.png'
 import food_2 from './food_2.png'
@@ -79,7 +81,9 @@ export const assets = {
     profile_icon,
     logout_icon,
     bag_icon,
-    parcel_icon
+    parcel_icon,
+    heading2,
+    heading3
 }
 
 export const menu_list = [
