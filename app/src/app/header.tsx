@@ -21,16 +21,19 @@ const withDelay = (callback: () => void, delay = 100) => {
   setTimeout(callback, delay);
 };
 
+
+const foregroundStyles = "bg-background/95 backdrop-blur-3xl"
+
 export const Header = () => {
   return (
     <>
-      <Container>
+      <Container className={cn("fixed top-0 z-50", foregroundStyles)}>
         <Content className="justify-between">
           <Section className="md:w-[20%]">
             <Logo />
           </Section>
 
-          <Section className="justify-end md:justify-start md:w-[30%]">
+          <Section className="justify-end  md:justify-start md:w-[30%]">
             <Search />
           </Section>
 
@@ -53,7 +56,7 @@ export const Header = () => {
         </Content>
       </Container>
 
-      {/* MOBLIE BOTTOM BAR */}
+      {/* MOBILE BOTTOM BAR */}
       <NavBarBottom />
     </>
   );
@@ -79,7 +82,7 @@ const Search = () => {
       <Button
         onClick={handleOpen}
         variant="outline"
-        className="hover:bg-foreground/5 flex h-12 w-12 items-center justify-center rounded-md md:rounded-md p-0 transition-colors md:h-full md:w-full"
+        className="hover:bg-neutral-200 !bg-background  border-md flex h-12 w-12 items-center justify-center rounded-md md:rounded-md p-0 transition-colors md:h-full md:w-full"
       >
         <SearchIcon className="text-foreground/80" />
         <input
@@ -94,12 +97,12 @@ const Search = () => {
       {isOpen && (
         <div
           className={cn(
-            "bg-background/80 fixed inset-0 z-50 flex flex-col items-start justify-center backdrop-blur-sm transition-opacity duration-300 md:hidden",
+            "bg-foreground/90 w-screen h-screen fixed inset-0 z-100 flex flex-col items-start justify-center transition-opacity duration-300 md:hidden",
             isOpen ? "opacity-100" : "opacity-0",
           )}
         >
-          <div className="container mt-10 flex w-full items-center justify-center px-4">
-            <div className="flex h-15 w-[80%] items-center justify-between">
+          <div className="container mt-5 flex w-full items-center justify-center px-4">
+            <div className="flex h-15 w-[90%] items-center justify-between">
               <div
                 className={cn(
                   "bg-card relative flex w-full items-center rounded-md border px-4 transition-all duration-300",
@@ -212,7 +215,7 @@ const NavBarBottom = () => {
   const pathname = usePathname();
 
   return (
-    <Container className="fixed bottom-0 rounded-t-lg border-t bg-neutral-400/5 backdrop-blur-sm md:hidden">
+    <Container className={cn("bottom-0 z-50 fixed rounded-t-lg border-t", foregroundStyles)}>
       <Content>
         {bottomNavItems.map((item) => {
           const isActive = pathname === item.href;
@@ -250,7 +253,7 @@ const Container = ({
 }: HTMLAttributes<HTMLDivElement>) => (
   <header
     className={cn(
-      "flex w-screen items-center justify-center border-b px-2 shadow-neutral-400/5 shadow-lg",
+      "flex w-screen items-center justify-center border-b px-2 shadow-neutral-400/5 shadow-lg backdrop-blur-3xl",
       className,
     )}
     {...props}

@@ -8,6 +8,11 @@ import { Button } from "@/shared/components/ui-kit/button";
 import { ArrowDown } from "lucide-react";
 import { HTMLAttributes } from "react";
 import { cn } from "@/shared/lib/utils";
+import { MenuList } from "@/features/menu";
+
+export const dynamic = "force-static";
+export const revalidate = 60 * 60 * 5;
+
 export async function generateMetadata() {
   return {
     title: "Главная страница",
@@ -31,7 +36,7 @@ export default function Home() {
               <h2 className="text-md font-medium">
                 Наша миссия - создавать продукты используя наиболее качественные
                 ингредиенты.{" "}
-                <span className="font-bold">Попробуйте наши блюда</span> и
+                <span className="">Попробуйте наши блюда</span> и
                 оцените качество!
               </h2>
             </div>
@@ -53,7 +58,7 @@ export default function Home() {
           <HeadingH>Наша миссия - </HeadingH>
           <HeadingP>
             это создавать продукты используя наиболее качественные ингредиенты.{" "}
-            <span className="font-bold">Попробуйте наши блюда</span> и оцените
+            Попробуйте наши блюда и оцените
             качество!
           </HeadingP>
           <div className="h-[1px] w-full bg-gray-300"></div>
@@ -67,21 +72,11 @@ export default function Home() {
           ингредиенты. <span className="font-bold">Попробуйте наши блюда</span>{" "}
           и оцените качество!
         </HeadingP>
-        <FlexRowSection>
-          <MenuItem />
-          <MenuItem />
-          <MenuItem />
-          <MenuItem />
-          <MenuItem />
-        </FlexRowSection>
+        <MenuList />
       </FlexColSection>
     </>
   );
 }
-
-const MenuItem = () => (
-  <div className="relative w-25 h-25 border rounded-lg"></div>
-);
 
 const HeadingH = ({
   children,

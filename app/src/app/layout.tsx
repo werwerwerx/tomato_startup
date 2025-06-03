@@ -15,6 +15,7 @@ const comfortaaFont = Comfortaa({
   subsets: ["latin"],
   variable: "--font-comfortaa",
   weight: ["300", "400", "500", "600", "700"],
+  preload: true,
 });
 
 export default function RootLayout({
@@ -28,7 +29,7 @@ export default function RootLayout({
         className={`${comfortaaFont.className} text-foreground bg-background overflow-x-hidden font-sans`}
       >
         <Header />
-        <Container className="mt-5">{children}</Container>
+        <Container className="mt-25">{children}</Container>
       </body>
     </html>
   );
