@@ -15,8 +15,10 @@ const comfortaaFont = Comfortaa({
   subsets: ["latin"],
   variable: "--font-comfortaa",
   weight: ["300", "400", "500", "600", "700"],
-  preload: true,
+  display: "swap",
 });
+
+export const dynamic = "force-static";
 
 export default function RootLayout({
   children,
@@ -26,10 +28,10 @@ export default function RootLayout({
   return (
     <html lang="en" className="overflow-x-hidden light">
       <body
-        className={`${comfortaaFont.className} text-foreground bg-background overflow-x-hidden font-sans`}
+        className={`${comfortaaFont.className} text-foreground bg-background overflow-x-hidden font-sans py-25`}
       >
         <Header />
-        <Container className="mt-25">{children}</Container>
+        <Container>{children}</Container>
       </body>
     </html>
   );

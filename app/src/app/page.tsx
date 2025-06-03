@@ -9,6 +9,7 @@ import { ArrowDown } from "lucide-react";
 import { HTMLAttributes } from "react";
 import { cn } from "@/shared/lib/utils";
 import { MenuList } from "@/features/menu";
+import { DishesPreview } from "@/features/dishes";
 
 export const dynamic = "force-static";
 export const revalidate = 60 * 60 * 5;
@@ -23,7 +24,7 @@ export async function generateMetadata() {
 export default function Home() {
   return (
     <>
-      <BlockHeading className="h-[30vh] md:h-[50vh] lg:h-[70vh]">
+      <BlockHeading className="h-[30vh] md:h-[60vh] lg:h-[70vh]">
         <FlexColSection
           className="h-full justify-center gap-6 px-10 md:items-start"
           id="heading-section"
@@ -54,7 +55,7 @@ export default function Home() {
         className="h-full justify-center gap-4 md:hidden"
         id="mission-section"
       >
-        <div className="flex flex-col gap-2 rounded-lg">
+        <div className="flex flex-col gap-4 rounded-lg">
           <HeadingH>Наша миссия - </HeadingH>
           <HeadingP>
             это создавать продукты используя наиболее качественные ингредиенты.{" "}
@@ -65,7 +66,7 @@ export default function Home() {
         </div>
       </FlexColSection>
 
-      <FlexColSection className="mt-5 h-full">
+      <FlexColSection className="h-full justify-start items-start">
         <HeadingH>Исследуйте наше меню</HeadingH>
         <HeadingP>
           Наша миссия - создавать продукты используя наиболее качественные
@@ -73,6 +74,10 @@ export default function Home() {
           и оцените качество!
         </HeadingP>
         <MenuList />
+      </FlexColSection>
+
+      <FlexColSection className="h-full justify-start items-start">
+        <DishesPreview className="w-full" />
       </FlexColSection>
     </>
   );
