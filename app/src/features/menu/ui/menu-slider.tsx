@@ -23,7 +23,7 @@ export const MenuRowSlider = ({
     <Carousel
       {...props}
       className="w-[90%]"
-      opts={{ align: "start", loop: true, }}
+      opts={{ align: "start" }}
     >
       <CarouselContent className="w-full">
         {items.map((item) => (
@@ -47,8 +47,6 @@ export const MenuRowSlider = ({
           </CarouselItem>
         ))}
       </CarouselContent>
-      <CarouselPrevious />
-      <CarouselNext />
     </Carousel>
   );
 };

@@ -52,7 +52,7 @@ export default function Home() {
       </BlockHeading>
 
       <FlexColSection
-        className="h-full justify-center gap-4 md:hidden"
+        className="h-full justify-center gap-4 md:hidden mt-10"
         id="mission-section"
       >
         <div className="flex flex-col gap-4 rounded-lg">
@@ -66,7 +66,7 @@ export default function Home() {
         </div>
       </FlexColSection>
 
-      <FlexColSection className="h-full justify-start items-start">
+      <FlexColSection className="h-full justify-start items-start mt-10">
         <HeadingH>Исследуйте наше меню</HeadingH>
         <HeadingP>
           Наша миссия - создавать продукты используя наиболее качественные
@@ -76,7 +76,11 @@ export default function Home() {
         <MenuList />
       </FlexColSection>
 
-      <FlexColSection className="h-full justify-start items-start">
+      <FlexColSection className="h-full justify-start items-start mt-10">
+        <HeadingH>Посмотрите наши блюда</HeadingH>
+        <HeadingP>
+          Попробуйте сначала чем мы славимся больше всего!
+        </HeadingP>
         <DishesPreview className="w-full" />
       </FlexColSection>
     </>
