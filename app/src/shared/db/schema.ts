@@ -29,6 +29,13 @@ export const users_table = pgTable("users", {
   updatedAt: timestamp("updatedAt").notNull().defaultNow(),
 })
 
+export const verification_codes_table = pgTable("verification_codes", {
+  id: serial("id").primaryKey(),
+  code: text("code").notNull(),
+  expiresAt: timestamp("expiresAt").notNull(),
+  accountId: integer("accountId").references(() => account_table.id),
+})
+
 export const account_table = pgTable("account", {
   id: serial("id").primaryKey(),
   name: text("name").notNull(),

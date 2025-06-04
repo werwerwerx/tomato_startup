@@ -1,9 +1,12 @@
+"use client";
+import { cn, withDelay } from "@/shared/lib/utils";
 import { Button } from "@/shared/components/ui-kit/button";
-import { Input } from "@/shared/components/ui-kit/input";
-import { withDelay, cn } from "@/shared/lib/utils";
-import { SearchIcon, X } from "lucide-react";
+import {
+  SearchIcon,
+  X,
+} from "lucide-react";
 import { useState } from "react";
-export const Search = () => {
+export const SearchFeature = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [isInputVisible, setIsInputVisible] = useState(false);
 

@@ -5,9 +5,9 @@ import { Button } from "@/shared/components/ui-kit/button";
 import {
   ShoppingCartIcon,
   UserIcon,
-  Search,
 } from "lucide-react";
 import Link from "next/link";
+import { SearchFeature as Search } from "@/features/search";
 import { HTMLAttributes } from "react";
 import { DesktopNavBar, NavBarBottom, NavIcon } from "@/shared/components/header-navs";
 
@@ -33,11 +33,12 @@ export const Header = ({isAuthorized}: {isAuthorized: boolean}) => {
 
 
           <HeaderSection className="hidden md:flex w-[20%] justify-end">
+            <Link href="/auth">
             <Button variant="default" className="" size="lg">
               <NavIcon icon={UserIcon} className="text-background" />
-              <span className="hidden md:block">Профиль</span>
+              {isAuthorized ? <span className="hidden md:block">Профиль</span> : <span className="hidden md:block">Войти</span>}
             </Button>
-
+            </Link>
             <Button variant="outline" className="" size="lg">
               <NavIcon icon={ShoppingCartIcon} />
               <span className="hidden md:block">Корзина</span>
@@ -53,7 +54,7 @@ export const Header = ({isAuthorized}: {isAuthorized: boolean}) => {
 };
 
 
-const HeaderContainer = ({
+export const HeaderContainer = ({
   children,
   className,
   ...props
@@ -98,7 +99,7 @@ export const HeaderContent = ({
   </div>
 );
 
-const Logo = ({ className, ...props }: HTMLAttributes<HTMLDivElement>) => (
+export const Logo = ({ className, ...props }: HTMLAttributes<HTMLDivElement>) => (
   <Link href="/">
     <img
       src={assets.logo.src}

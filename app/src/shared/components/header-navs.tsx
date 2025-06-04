@@ -1,20 +1,18 @@
-"use client";
+import { cn, withDelay } from "@/shared/lib/utils";
+import { Button } from "@/shared/components/ui-kit/button";
 import {
-  SearchIcon,
-  X,
-  LucideIcon,
   Grip,
   MenuIcon,
   ShoppingCartIcon,
   UserIcon,
+  LucideIcon,
+  SearchIcon,
+  X,
 } from "lucide-react";
 import Link from "next/link";
+import {  useState } from "react";
 import { usePathname } from "next/navigation";
-import { useState } from "react";
-import { withDelay, cn } from "../lib/utils";
-import { Button } from "./ui-kit/button";
-import { foregroundStyles, HeaderSection } from "@/app/header";
-import { Container } from "@/shared/components/container";
+import { foregroundStyles, HeaderContainer, HeaderSection } from "@/app/header";
 
 export const Search = () => {
   const [isOpen, setIsOpen] = useState(false);
@@ -169,7 +167,7 @@ export const NavBarBottom = () => {
   const pathname = usePathname();
 
   return (
-    <Container className={cn("fixed bottom-0 z-50 rounded-t-lg border-t", foregroundStyles)}>
+    <HeaderContainer className={cn("fixed bottom-0 z-50 rounded-t-lg border-t", foregroundStyles)}>
       <div className="container flex h-20 flex-row items-center">
         {bottomNavItems.map((item) => {
           const isActive = pathname === item.href;
@@ -196,6 +194,6 @@ export const NavBarBottom = () => {
           );
         })}
       </div>
-    </Container>
+    </HeaderContainer>
   );
 };

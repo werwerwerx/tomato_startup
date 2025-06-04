@@ -37,7 +37,6 @@ export const MenuList = async ({
 };
 
 export const MenuListTopBar =  ({items}: {items: MenuItem[]}) => {
-
   return (
     <MenuListTopBarContainer>
       <FlexRowSection>
