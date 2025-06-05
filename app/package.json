@@ -7,12 +7,12 @@
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
-    "seed": "tsx src/shared/db/seed.ts",
-    "email:dev": "tsx src/shared/lib/email-templates/verification.tsx"
+    "seed": "tsx src/shared/db/seed.ts"
   },
   "dependencies": {
     "@radix-ui/react-slot": "^1.2.3",
-    "@types/jsonwebtoken": "^9.0.9",
+    "@react-email/render": "^1.1.2",
+    "@react-email/tailwind": "^1.0.5",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "create-email": "^1.2.1",
@@ -21,6 +21,7 @@
     "drizzle-seed": "^0.3.1",
     "embla-carousel-autoplay": "^8.6.0",
     "embla-carousel-react": "^8.6.0",
+    "input-otp": "^1.4.2",
     "jsonwebtoken": "^9.0.2",
     "lucide-react": "^0.487.0",
     "next": "15.2.4",
@@ -36,6 +37,7 @@
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4",
+    "@types/jsonwebtoken": "^9.0.9",
     "@types/node": "^20",
     "@types/pg": "^8.15.2",
     "@types/react": "^19",
