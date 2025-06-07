@@ -10,13 +10,13 @@ import z from "zod";
 import { envConfig } from "@/shared/lib/config";
 import jwt from "jsonwebtoken";
 
-type VerifyCodeResponse = {
-  message?: "Успешно зарегистрирован";
-  error?:
-    | "Некорректный код"
-    | "Срок действия кода истек"
-    | "Произошла ошибка на стороне сервера";
-};
+import { ApiResponse } from "@/shared/types";
+import { generateAccessToken, setTokensToCookie } from "@/shared/tokens";
+
+type VerifyCodeResponse = ApiResponse<
+  "Успешно зарегистрирован",
+  "Некорректный код" | "Срок действия кода истек" | "Произошла ошибка на стороне сервера"
+>;
 
 export type VerifyCodeRPC = (code: string) => Promise<VerifyCodeResponse>;
 
@@ -39,26 +39,12 @@ const verifyCode = async (
     userId: user.id,
   });
 
-  const jwtAccessToken = jwt.sign(
-    {
-      userId: user.id,
-      email: codeValidationResult,
-    },
-    envConfig.JWT_SECRET,
-    {
-      expiresIn: "1h",
-    },
-  );
+  const jwtAccessToken = generateAccessToken(user.id, codeValidationResult);
   const response: NextResponse<VerifyCodeResponse> = NextResponse.json(
     { message: "Успешно зарегистрирован" },
     { status: 200 },
   );
-  response.cookies.set(envConfig.ACCESS_TOKEN_KEY, jwtAccessToken, {
-    httpOnly: true,
-    secure: envConfig.IS_HTTPS,
-    maxAge: 60 * 60 * 24 * 30,
-    path: "/",
-  });
+  await setTokensToCookie(jwtAccessToken);
   return response;
 };
 

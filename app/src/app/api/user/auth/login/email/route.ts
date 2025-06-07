@@ -4,19 +4,17 @@ import { sendLoginVerificationMail } from "@/shared/lib/resend";
 import { eq } from "drizzle-orm";
 import { NextRequest, NextResponse } from "next/server";
 import z from "zod";
+import { ApiResponse } from "@/shared/types";
 
 export const POST = async (req: NextRequest) => {
   const body = await req.json();
   return sendLoginEmail(body.email);
 };
 
-export type LoginResponse = {
-  message?: "Письмо с кодом аутентификации отправлено вам на почту";
-  error?:
-    | "Пользователь с таким email не найден"
-    | "Ошибка при отправке письма"
-    | "Некорректный email";
-};
+export type LoginResponse = ApiResponse<
+  "Письмо с кодом аутентификации отправлено вам на почту",
+  "Пользователь с таким email не найден" | "Ошибка при отправке письма" | "Некорректный email"
+>;
 
 const sendLoginEmail = async (
   email: string,

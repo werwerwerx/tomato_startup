@@ -3,7 +3,7 @@ import z from "zod";
 import db from "@/shared/db";
 import {
   account_table,
-  verification_codes_table,
+  verification_login_codes_table,
   verification_registration_codes_table,
 } from "@/shared/db/schema";
 import {
@@ -11,15 +11,12 @@ import {
   sendRegisterVerificationCode,
 } from "@/shared/lib/resend";
 import { eq } from "drizzle-orm";
+import { ApiResponse } from "@/shared/types";
 
-type RegisterEmailResponse = {
-  message?: "Письмо с кодом аутентификации отправлено вам на почту";
-  error?:
-    | "Пользователь с таким email уже существует"
-    | "Ошибка при отправке письма"
-    | "Некорректный email"
-    | "Произошла ошибка на стороне сервера"
-};
+type RegisterEmailResponse = ApiResponse<
+  "Письмо с кодом аутентификации отправлено вам на почту",
+  "Пользователь с таким email уже существует" | "Ошибка при отправке письма" | "Некорректный email" | "Произошла ошибка на стороне сервера"
+>;
 
 export type SendRegisterEmailRPC = (
   email: string,
