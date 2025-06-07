@@ -45,5 +45,5 @@ try {
 export const envConfig = {
   ...parsedCnf,
   DATABASE_URL: `postgresql://${parsedCnf.DATABASE_USER}:${parsedCnf.DATABASE_PASSWORD}@${parsedCnf.DATABASE_HOST}:${parsedCnf.DATABASE_PORT}/${parsedCnf.DATABASE_DB}`,
-  AUTH_TOKEN_NAME: "auth-token",
+  ACCESS_TOKEN_KEY: "access-token",
 };

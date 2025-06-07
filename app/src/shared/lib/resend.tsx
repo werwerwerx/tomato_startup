@@ -1,7 +1,7 @@
 import { Resend } from "resend";
 import { envConfig } from "./config";
 import { renderToStaticMarkup, renderToString } from 'react-dom/server';
-import { VerificationEmail } from "./email-templates/verification";
+import { VerificationEmail } from "./email-templates/login-verification";
 import { renderHtml } from "./renderHtml";
 import { RegisterVerifyEmail } from "./email-templates/register-verify";
 
@@ -13,7 +13,7 @@ export const sendRegisterVerificationCode = async (to: string, code: string) => 
   );
 
   const { data, error } = await resend.emails.send({
-    from: "noreply@tomato.dev",
+    from: "Tomato <onboarding@resend.dev>",
     to,
     subject: "Tomato Verification Code",
     html,
@@ -34,7 +34,7 @@ export const sendLoginVerificationMail = async (to: string, verificationLink: st
 );
   
   const { data, error } = await resend.emails.send({
-    from: "noreply@tomato.dev",
+    from: "Tomato <onboarding@resend.dev>",
     to,
     subject: "Tomato Verification Code",
     html,

@@ -1,32 +1,20 @@
 "use client";
 import { useRouter } from "next/navigation";
 import { KeyboardEvent, useState, useCallback } from "react";
-import { 
-  AuthStrategy, 
-  emailSchema, 
-  AuthBehavior, 
-  REGISTER_EMAIL_ERROR_MSGS,
-  UseAuthResult,
-  AuthResponse,
-  LOGIN_EMAIL_ERROR_MSGS
-} from "./types";
-
-const AUTH_BEHAVIOR: Record<AuthStrategy, AuthBehavior> = {
-  login: {
-    url: "/api/auth/mail",
-    schema: emailSchema,
-    errorMessages: LOGIN_EMAIL_ERROR_MSGS,
-    redirectTo: "prev",
-  },
-  register: {
-    url: "/api/auth/register",
-    schema: emailSchema,
-    errorMessages: REGISTER_EMAIL_ERROR_MSGS,
-    redirectTo: "prev",
-  },
+import { emailSchema } from "./types";
+import { apiClient } from "@/shared/api.client";
+// shit code area started. 
+type AuthResponse = {
+  message?: string;
+  error?: string;
 };
 
-export const useEmailSubmit = (strategy: AuthStrategy): UseAuthResult => {
+// hmm m refactor or fuck it ? hmmm... some refactor weel need. because we need to implement oAuth provider.    
+// minimum: separate ui from auth logic.
+// mayebe i want to see the code more obvious because i dont know what is what is responsoble for what( handleSubmit for example... ). maybe i change some names.
+
+
+export const useEmailAuth = (type: "login" | "register" | "login-verify" | "register-verify") => {
   const [email, setEmail] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -39,57 +27,53 @@ export const useEmailSubmit = (strategy: AuthStrategy): UseAuthResult => {
     setIsSuccess(false);
   }, []);
 
-  const validateEmail = useCallback(() => {
-    const result = AUTH_BEHAVIOR[strategy].schema.safeParse({ email });
+  const validateEmail = () => {
+    const result = emailSchema.safeParse({ email });
     if (!result.success) {
       setError(result.error.errors[0].message);
       return false;
     }
     setError(null);
     return true;
-  }, [email, strategy]);
+  };
 
-  const handleSubmit = useCallback(async () => {
-    if (!validateEmail()) return;
+  const handleSubmit = async (): Promise<AuthResponse> => {
+    if (!validateEmail()) {
+      return { error: "Некорректный email" };
+    }
 
     setIsLoading(true);
-    const { url, errorMessages } = AUTH_BEHAVIOR[strategy];
-
     try {
-      const res = await fetch(url, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ email }),
-      });
-
-      const data: AuthResponse = await res.json();
-
-      if (res.status !== 200) {
-        setError(data.error || errorMessages[Number(res.status)] || REGISTER_EMAIL_ERROR_MSGS.UNKNOWN);
-        return;
+      const result = await {
+        "login": apiClient.loginByEmail,
+        "register": apiClient.registerByEmail,
+        "login-verify": apiClient.loginByEmail,
+        "register-verify": apiClient.registerByEmail,
+      }[type](email);
+      if (result.error) {
+        setError(result.error);
+        return { error: result.error };
       }
-
-      setIsSuccess(true);
-      if (AUTH_BEHAVIOR[strategy].redirectTo === "prev") {
-        router.back();
-      } else {
-        router.push(AUTH_BEHAVIOR[strategy].redirectTo);
+      if (result.message) {
+        setIsSuccess(true);
+        return { message: result.message };
       }
-    } catch (error) {
-      console.error("Error during auth submission:", error);
-      setError(REGISTER_EMAIL_ERROR_MSGS[500]);
+      return { error: "Неизвестная ошибка" };
+    } catch (err) {
+      const error = err instanceof Error ? err.message : "Произошла ошибка";
+      setError(error);
+      return { error };
     } finally {
       setIsLoading(false);
     }
-  }, [email, strategy, router, validateEmail]);
+  };
 
   const handleKeyPress = useCallback(
-    (e: KeyboardEvent<HTMLInputElement>) => {
+    async (e: KeyboardEvent<HTMLInputElement>): Promise<AuthResponse> => {
       if (e.key === "Enter") {
-        handleSubmit();
+        return handleSubmit();
       }
+      return { error: "Неверная клавиша" };
     },
     [handleSubmit]
   );
@@ -101,9 +85,9 @@ export const useEmailSubmit = (strategy: AuthStrategy): UseAuthResult => {
     setIsLoading(false);
   }, []);
 
-  const resend = useCallback(() => {
+  const resend = useCallback(async (): Promise<AuthResponse> => {
     setIsSuccess(false);
-    handleSubmit();
+    return handleSubmit();
   }, [handleSubmit]);
 
   return {
@@ -112,7 +96,7 @@ export const useEmailSubmit = (strategy: AuthStrategy): UseAuthResult => {
     isLoading,
     error,
     isSuccess,
-    handleSubmit,
+    submit:handleSubmit,
     validateEmail,
     handleKeyPress,
     reset,

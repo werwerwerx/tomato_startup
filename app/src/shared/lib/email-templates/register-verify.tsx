@@ -1,51 +1,90 @@
-"use client";
-
-import { cn } from "@/shared/lib/utils";
+import { TailwindProvider } from './tailwind.config';
 
 interface VerificationCodeProps {
   code: string;
-  className?: string;
 }
 
-const CodeDisplay = ({ code }: { code: string }) => {
+export const RegisterVerifyEmail = ({ code }: VerificationCodeProps) => {
   return (
-    <div className="inline-flex gap-2 my-4">
-      {code.split("").map((digit, i) => (
-        <div
-          key={i}
-          className="w-9 h-12 rounded-md bg-gray-100 flex items-center justify-center border border-gray-200"
-        >
-          <span className="text-xl font-semibold text-gray-900">{digit}</span>
-        </div>
-      ))}
-    </div>
-  );
-};
-
-export const RegisterVerifyEmail = ({ code, className }: VerificationCodeProps) => {
-  return (
-    <div className={cn("w-full max-w-[600px] mx-auto p-8 bg-white text-gray-900", className)}>
-      <div className="text-center mb-8">
-        <h1 className="text-2xl font-bold mb-2">Подтвердите ваш email</h1>
-        <p className="text-gray-600">
+    <div style={{
+      fontFamily: 'system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
+      maxWidth: '600px',
+      margin: '0 auto',
+      padding: '32px',
+      backgroundColor: '#ffffff',
+      color: '#1a1a1a'
+    }}>
+      <div style={{
+        marginBottom: '24px',
+        textAlign: 'center'
+      }}>
+        <h1 style={{
+          fontSize: '24px',
+          fontWeight: '600',
+          marginBottom: '8px',
+          color: '#1a1a1a'
+        }}>
+          Подтвердите ваш email
+        </h1>
+        <p style={{
+          color: '#666666',
+          fontSize: '16px',
+          lineHeight: '1.5'
+        }}>
           Для завершения регистрации, пожалуйста, введите этот код на сайте:
         </p>
       </div>
 
-      <div className="text-center">
-        <CodeDisplay code={String(code)} />
+      <div style={{
+        display: 'flex',
+        justifyContent: 'center',
+        gap: '8px',
+        marginBottom: '32px'
+      }}>
+        {code.split('').map((digit, index) => (
+          <div 
+            key={index}
+            style={{
+              width: '48px',
+              height: '48px',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              border: '2px solid #e5e5e5',
+              borderRadius: '8px',
+              fontSize: '24px',
+              fontWeight: '600',
+              backgroundColor: '#f9f9f9',
+              color: '#1a1a1a'
+            }}
+          >
+            {digit}
+          </div>
+        ))}
       </div>
 
-      <div className="mt-8 text-sm text-gray-600">
+      <div style={{
+        marginTop: '32px',
+        fontSize: '14px',
+        color: '#666666',
+        lineHeight: '1.5'
+      }}>
         <p>
           Если вы не запрашивали этот код, пожалуйста, проигнорируйте это письмо.
         </p>
-        <p className="mt-2">
+        <p style={{ marginTop: '8px' }}>
           Код действителен в течение 10 минут.
         </p>
       </div>
 
-      <div className="mt-8 pt-8 border-t border-gray-200 text-center text-xs text-gray-500">
+      <div style={{
+        marginTop: '32px',
+        paddingTop: '32px',
+        borderTop: '1px solid #e5e5e5',
+        textAlign: 'center',
+        fontSize: '12px',
+        color: '#999999'
+      }}>
         <p>
           Это автоматическое письмо, пожалуйста, не отвечайте на него.
         </p>
