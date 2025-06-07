@@ -12,8 +12,34 @@ import {
 } from "@/shared/components/ui-kit/input-otp";
 import { AuthForm } from "./auth-form.ui";
 import { useRouter, usePathname } from "next/navigation";
+import EventEmitter from "events";
 // shit code area started.
 // what is the fuck is this ? what n idea to do naything in one form ?? 4 actions in one form ??
+// changes - submit auth email button is gonna be responsible for submit all he gonna be need is email. and we gonna make sumbit verification code button.
+// email input is gonna be responsible for validation and throwing error validation,
+// error component is just render errors from api's
+// yea and form is similiar for auth and register. for the verification we gonna make new form.
+// and we implement pattern mediator
+// he gonna be delegate some actions to other components.
+// validation, submiting, toggling api behavior, error handling.
+// what about providers ? is gonna be injected into the form like mini feautures that not depending on this form logic. because they gonna be have their own.
+
+type AuthFormEvent = "email-change" | "submit" | "resend" | "toggle" | "verify";
+type EventMap = Record<AuthFormEvent, Record<string, unknown>>;
+const eventMap: EventMap = {
+  "email-change": {
+    email: string;
+    previousEmail: string;
+  }
+}
+
+class AuthFormMediator {
+  eventEmmiter = new EventEmitter();
+
+  constructor(private formStrategy: FormStrategy) {
+  }
+}
+
 type FormStrategy = "login" | "register" | "login-verify" | "register-verify";
 
 const script = {
