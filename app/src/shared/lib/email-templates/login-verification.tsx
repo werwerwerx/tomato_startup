@@ -7,6 +7,7 @@ interface VerificationEmailProps {
 }
 
 export const VerificationEmail: FC<VerificationEmailProps> = ({ code }) => {
+  console.log(code, typeof code);
   return (
     <TailwindProvider>
       <div className="w-full max-w-[600px] flex flex-col gap-4 mx-auto p-8 text-foreground bg-background font-sans">

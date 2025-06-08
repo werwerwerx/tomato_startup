@@ -22,6 +22,9 @@ const configSchema = z.object({
   NODE_ENV: z.enum(["production", "development"], {
     errorMap: () => ({ message: "NODE_ENV is required" }),
   }),
+  YANDEX_CLIENT_ID: z.string().min(1, "YANDEX CLIENT ID is required"),
+  YANDEX_CLIENT_SECRET: z.string().min(1, "YANDEX CLIENT SECRET is required"),
+  NEXTAUTH_URL: process.env.NODE_ENV === "production" ? z.string().min(1, "NEXTAUTH URL is required") : z.string().min(1).default("http://localhost:3000"),
 })
 let parsedCnf: z.infer<typeof configSchema>;
 try {
@@ -36,6 +39,9 @@ try {
     APP_URL: process.env.APP_URL,
     IS_HTTPS: process.env.NODE_ENV === "production",
     NODE_ENV: process.env.NODE_ENV as "production" | "development",
+    YANDEX_CLIENT_ID: process.env.YANDEX_CLIENT_ID,
+    YANDEX_CLIENT_SECRET: process.env.YANDEX_CLIENT_SECRET,
+    NEXTAUTH_URL: process.env.NEXTAUTH_URL,
   });
 } catch (error) {
   console.error("Error parsing config:", error);

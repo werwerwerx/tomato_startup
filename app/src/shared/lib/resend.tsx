@@ -30,7 +30,7 @@ export const sendRegisterVerificationCode = async (to: string, code: string) => 
 
 export const sendLoginVerificationMail = async (to: string, verificationLink: string) => {
   const html = await renderHtml(
-    <VerificationEmail verificationLink={verificationLink} />
+    <VerificationEmail code={verificationLink} />
 );
   
   const { data, error } = await resend.emails.send({

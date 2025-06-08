@@ -5,6 +5,8 @@ import { Header } from "@/app/header";
 import { Container } from "@/shared/components/container";
 import { cookies } from "next/headers";
 import { envConfig } from "@/shared/lib/config";
+import { validateAccessToken } from "@/shared/tokens";
+
 export const metadata: Metadata = {
   title: "Tomato e-commerce",
   description: "This is a site maked just for portfolio",
@@ -20,16 +22,19 @@ const comfortaaFont = Comfortaa({
   display: "swap",
 });
 
-export const dynamic = "force-static";
-
 export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  const cookieStore = await cookies()
-  const token = cookieStore.get(envConfig.ACCESS_TOKEN_KEY)?.value
-  const isAuthorized = !!token;
+  let isAuthorized = false;
+  try{
+    const user = await validateAccessToken();
+    isAuthorized = !!user;
+  }catch(error){
+    console.error("Token validation error:", error);
+    isAuthorized = false;
+  }
 
   return (
     <html lang="en" className="overflow-x-hidden light">

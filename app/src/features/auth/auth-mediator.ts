@@ -141,34 +141,38 @@ export class AuthFormMediator implements AuthFormMediator {
   }
 
   submitCodeAction = (code: string) => {
-    if (this.isCodeSuccessfullySubmitted) {
-      throw new Error("Code already submitted, error inside application");
-    }
     
+    // Clear previous errors/messages
     this.eventEmmiter.emit("error", null);
     this.eventEmmiter.emit("message", null);
     
+    // Start loading
     this.eventEmmiter.emit("code_submitted", code);
     
-    this.api[this.formStrategy](code).then((result: ApiResponse<string, string>) => {
-      if (result.error) {
-        this.eventEmmiter.emit("error", result.error);
+    console.log("Submitting code:", code, "Strategy:", this.formStrategy);
+    
+    this.api[this.formStrategy](code)
+      .then((result: ApiResponse<string, string>) => {
+        console.log("Code submission result:", result);
+        if (result.error) {
+          this.eventEmmiter.emit("error", result.error);
+          this.isCodeSuccessfullySubmitted = false;
+          this.eventEmmiter.emit("code_submitted_success");
+          return;
+        }
+        
+        if (result.message) {
+          this.isCodeSuccessfullySubmitted = true;
+          this.eventEmmiter.emit("message", result.message);
+          this.eventEmmiter.emit("code_submitted_success");
+        }
+      })
+      .catch((error) => {
+        console.error("Code submission error:", error);
+        this.eventEmmiter.emit("error", "Произошла ошибка при отправке кода");
         this.isCodeSuccessfullySubmitted = false;
         this.eventEmmiter.emit("code_submitted_success");
-        return;
-      }
-      
-      if (result.message) {
-        this.isCodeSuccessfullySubmitted = true;
-        this.eventEmmiter.emit("message", result.message);
-        this.eventEmmiter.emit("code_submitted_success");
-      }
-    }).catch((error) => {
-      console.error("API call error:", error);
-      this.eventEmmiter.emit("error", "Произошла ошибка при отправке кода");
-      this.isCodeSuccessfullySubmitted = false;
-      this.eventEmmiter.emit("code_submitted_success");
-    });
+      });
   }
 
   useIsCodeSubmitSuccess = () => {
@@ -217,17 +221,17 @@ export class AuthFormMediator implements AuthFormMediator {
 
   validateEmail = (email: string) => {
     try {
-      const emailSchema = z.string().email();
+      const emailSchema = z.string().email().min(3);
       const result = emailSchema.safeParse(email);
 
-      if (!result.success) {
+      if (!result.success || email === "") {
         this.eventEmmiter.emit("validation_success", false);
         this.eventEmmiter.emit("error", "Некорректный email");
         return false;
       }
 
-      this.eventEmmiter.emit("error", null);
       this.eventEmmiter.emit("validation_success", true);
+      this.eventEmmiter.emit("error", null);
       return true;
     } catch (error) {
       console.error("Email validation error:", error);
