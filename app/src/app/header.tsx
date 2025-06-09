@@ -10,11 +10,12 @@ import Link from "next/link";
 import { SearchFeature as Search } from "@/features/search";
 import { HTMLAttributes } from "react";
 import { DesktopNavBar, NavBarBottom, NavIcon } from "@/shared/components/header-navs";
+import { UserProfileButton } from "@/features/auth/profile.button";
 
 
 export const foregroundStyles = "bg-background/95 backdrop-blur-3xl"
 
-export const Header = ({isAuthorized}: {isAuthorized: boolean}) => {
+export const Header = () => {
   return (
     <>
       <HeaderContainer className={cn("fixed top-0 z-50", foregroundStyles)}>
@@ -34,10 +35,7 @@ export const Header = ({isAuthorized}: {isAuthorized: boolean}) => {
 
           <HeaderSection className="hidden md:flex w-[20%] justify-end">
             <Link href="/auth">
-            <Button variant="default" className="" size="lg">
-              <NavIcon icon={UserIcon} className="text-background" />
-              {isAuthorized ? <span className="hidden md:block">Профиль</span> : <span className="hidden md:block">Войти</span>}
-            </Button>
+              <UserProfileButton />
             </Link>
             <Button variant="outline" className="" size="lg">
               <NavIcon icon={ShoppingCartIcon} />

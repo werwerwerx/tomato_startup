@@ -3,9 +3,8 @@ import { Comfortaa } from "next/font/google";
 import "./globals.css";
 import { Header } from "@/app/header";
 import { Container } from "@/shared/components/container";
-import { cookies } from "next/headers";
-import { envConfig } from "@/shared/lib/config";
-import { validateAccessToken } from "@/shared/tokens";
+import { auth } from "./auth";
+import { SessionProvider } from "next-auth/react";
 
 export const metadata: Metadata = {
   title: "Tomato e-commerce",
@@ -22,27 +21,24 @@ const comfortaaFont = Comfortaa({
   display: "swap",
 });
 
+function ClientSessionProvider({ children, session }: { children: React.ReactNode, session: any }) {
+  return <SessionProvider session={session}>{children}</SessionProvider>;
+}
+
 export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  let isAuthorized = false;
-  try{
-    const user = await validateAccessToken();
-    isAuthorized = !!user;
-  }catch(error){
-    console.error("Token validation error:", error);
-    isAuthorized = false;
-  }
-
   return (
     <html lang="en" className="overflow-x-hidden light">
       <body
-        className={`${comfortaaFont.className} text-foreground bg-background overflow-x-hidden font-sans py-25`}
+        className={`${comfortaaFont.className} text-foreground bg-muted w-screen h-screen overflow-x-hidden font-sans py-25`}
       >
-        <Header isAuthorized={isAuthorized} />
-        <Container>{children}</Container>
+        <ClientSessionProvider session={await auth()}>
+          <Header />
+          <Container>{children}</Container>
+        </ClientSessionProvider>
       </body>
     </html>
   );

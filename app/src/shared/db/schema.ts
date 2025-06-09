@@ -1,5 +1,15 @@
-import { integer, pgEnum, pgTable, serial, text, timestamp } from "drizzle-orm/pg-core";
-
+import {
+  boolean,
+  timestamp,
+  pgTable,
+  text,
+  primaryKey,
+  integer,
+  serial,
+} from "drizzle-orm/pg-core"
+import postgres from "postgres"
+import { drizzle } from "drizzle-orm/postgres-js"
+import type { AdapterAccount } from "next-auth/adapters"
 
 
 export const categories_table = pgTable("categories", {
@@ -23,31 +33,85 @@ export const dishes_table = pgTable("dishes", {
   categoryId: integer("categoryId").references(() => categories_table.id),
 })
 
-export const users_table = pgTable("users", {
-  id: serial("id").primaryKey(),
-  createdAt: timestamp("createdAt").notNull().defaultNow(),
-  updatedAt: timestamp("updatedAt").notNull().defaultNow(),
-})
-
-export const verification_login_codes_table = pgTable("verification_login_codes", {
-  id: serial("id").primaryKey(),
-  code: text("code").notNull(),
-  accountId: integer("accountId").references(() => account_table.id),
-  expiresAt: timestamp("expiresAt").notNull(),
-  email: text("email").notNull(),
-})
-export const verification_registration_codes_table = pgTable("verification_registration_codes", {
-  id: serial("id").primaryKey(),
-  code: text("code").notNull(),
-  expiresAt: timestamp("expiresAt").notNull(),
-  email: text("email").notNull(),
-})
-
-export const account_table = pgTable("account", {
-  id: serial("id").primaryKey(),
-  name: text("name").notNull(),
-  avatar_url: text("avatar_url").default("https://t3.ftcdn.net/jpg/03/53/11/00/360_F_353110097_nbpmfn9iHlxef4EDIhXB1tdTD0lcWhG9.jpg"),
+export const users = pgTable("user", {
+  id: text("id")
+    .primaryKey()
+    .$defaultFn(() => crypto.randomUUID()),
+  name: text("name"),
   email: text("email").unique(),
-  userId: integer("userId").references(() => users_table.id),
-  provider: text({enum: ["yandex", "email", "telegram"]}).notNull().default("email"),
+  emailVerified: timestamp("emailVerified", { mode: "date" }),
+  image: text("image"),
 })
+ 
+export const accounts = pgTable(
+  "account",
+  {
+    userId: text("userId")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    type: text("type").$type<AdapterAccount["type"]>().notNull(),
+    provider: text("provider").notNull(),
+    providerAccountId: text("providerAccountId").notNull(),
+    refresh_token: text("refresh_token"),
+    access_token: text("access_token"),
+    expires_at: integer("expires_at"),
+    token_type: text("token_type"),
+    scope: text("scope"),
+    id_token: text("id_token"),
+    session_state: text("session_state"),
+  },
+  (account) => [
+    {
+      compoundKey: primaryKey({
+        columns: [account.provider, account.providerAccountId],
+      }),
+    },
+  ]
+)
+ 
+export const sessions = pgTable("session", {
+  sessionToken: text("sessionToken").primaryKey(),
+  userId: text("userId")
+    .notNull()
+    .references(() => users.id, { onDelete: "cascade" }),
+  expires: timestamp("expires", { mode: "date" }).notNull(),
+})
+ 
+export const verificationTokens = pgTable(
+  "verificationToken",
+  {
+    identifier: text("identifier").notNull(),
+    token: text("token").notNull(),
+    expires: timestamp("expires", { mode: "date" }).notNull(),
+  },
+  (verificationToken) => [
+    {
+      compositePk: primaryKey({
+        columns: [verificationToken.identifier, verificationToken.token],
+      }),
+    },
+  ]
+)
+ 
+export const authenticators = pgTable(
+  "authenticator",
+  {
+    credentialID: text("credentialID").notNull().unique(),
+    userId: text("userId")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    providerAccountId: text("providerAccountId").notNull(),
+    credentialPublicKey: text("credentialPublicKey").notNull(),
+    counter: integer("counter").notNull(),
+    credentialDeviceType: text("credentialDeviceType").notNull(),
+    credentialBackedUp: boolean("credentialBackedUp").notNull(),
+    transports: text("transports"),
+  },
+  (authenticator) => [
+    {
+      compositePK: primaryKey({
+        columns: [authenticator.userId, authenticator.credentialID],
+      }),
+    },
+  ]
+)
