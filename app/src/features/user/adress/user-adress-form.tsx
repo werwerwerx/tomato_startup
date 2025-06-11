@@ -55,7 +55,7 @@ export const UserAdressForm = ({
   const { errors, isSubmitting } = formState;
 
   const watchedAddress = watch("address");
-  
+
   const [debouncedQuery] = useDebounce(watchedAddress || "", 300);
 
   const {
@@ -68,41 +68,72 @@ export const UserAdressForm = ({
   });
 
   React.useEffect(() => {
-    const shouldShow = isEditing && 
-                     suggestions.length > 0 && 
-                     Boolean(watchedAddress) && 
-                     watchedAddress.length >= 3;
-    
+    const shouldShow =
+      isEditing &&
+      suggestions.length > 0 &&
+      Boolean(watchedAddress) &&
+      watchedAddress.length >= 3;
+
     setShowSuggestions(shouldShow);
   }, [suggestions, isEditing, watchedAddress]);
 
   const handleFormSubmit = async (data: AddressFormData) => {
-    setCurrentAddress(data.address);
-    handleClose();
+    try {
+      // Отправляем запрос на обновление адреса
+      const response = await fetch("/api/user/adress", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ adress: data.address }),
+      });
 
-    if (onAddressChange) {
-      await onAddressChange(data.address);
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || "Ошибка при обновлении адреса");
+      }
+
+      const result = await response.json();
+
+      // Обновляем локальное состояние
+      setCurrentAddress(data.address);
+      handleClose();
+
+      // Вызываем callback если передан
+      if (onAddressChange) {
+        await onAddressChange(data.address);
+      }
+
+      // Если API сигнализирует о необходимости обновления сессии
+      if (result.shouldRefreshSession) {
+        // Обновляем страницу для получения новой сессии
+        window.location.reload();
+      }
+
+      reset({ address: data.address });
+    } catch (error) {
+      console.error("Ошибка при обновлении адреса:", error);
+      // Можно добавить toast уведомление об ошибке
+      alert(error instanceof Error ? error.message : "Произошла ошибка");
     }
-
-    reset({ address: data.address });
   };
 
   // Заглушка для определения местоположения
   const handleDetectLocation = async () => {
     setIsDetecting(true);
-    
+
     try {
       // Здесь будет логика определения местоположения
-      await new Promise(resolve => setTimeout(resolve, 2000)); // Имитация запроса
-      
+      await new Promise((resolve) => setTimeout(resolve, 2000)); // Имитация запроса
+
       // Заглушка - устанавливаем тестовый адрес
       const detectedAddress = "г. Москва, ул. Тверская, д. 1";
       setCurrentAddress(detectedAddress);
-      
+
       if (onAddressChange) {
         await onAddressChange(detectedAddress);
       }
-      
+
       console.log("Местоположение определено (заглушка):", detectedAddress);
     } catch (error) {
       console.error("Ошибка определения местоположения:", error);
@@ -122,7 +153,8 @@ export const UserAdressForm = ({
     withDelay(() => {
       setIsEditing(false);
       // Возвращаем предыдущее значение если отменили
-      const previousValue = currentAddress === DEFAULT_ADDRESS ? "" : currentAddress;
+      const previousValue =
+        currentAddress === DEFAULT_ADDRESS ? "" : currentAddress;
       reset({ address: previousValue });
     });
   };
@@ -165,7 +197,9 @@ export const UserAdressForm = ({
         >
           <div className="text-foreground">{suggestion.text}</div>
           {suggestion.subtitle && (
-            <div className="text-foreground/60 text-xs">{suggestion.subtitle}</div>
+            <div className="text-foreground/60 text-xs">
+              {suggestion.subtitle}
+            </div>
           )}
         </button>
       ))}
@@ -175,7 +209,7 @@ export const UserAdressForm = ({
   return (
     <>
       {/* Обычное состояние */}
-      <div className="space-y-2 relative">
+      <div className="relative space-y-2">
         {/* Заголовок секции */}
         <div className="flex items-center gap-2">
           <MapPinIcon className="text-foreground h-4 w-4" />
@@ -187,9 +221,9 @@ export const UserAdressForm = ({
         {/* Отображение текущего адреса */}
         <div className="flex w-full flex-col gap-2">
           <p className="text-foreground/80 text-sm">{currentAddress}</p>
-          
+
           {/* Кнопки управления */}
-          <div className="flex gap-2 w-full">
+          <div className="flex w-full gap-2">
             {enableGeolocation && (
               <Button
                 onClick={handleDetectLocation}
@@ -199,14 +233,14 @@ export const UserAdressForm = ({
                 disabled={isDetecting}
               >
                 {isDetecting ? (
-                  <div className="h-4 w-4 animate-spin rounded-full border-2 border-primary-foreground border-t-transparent" />
+                  <div className="border-primary-foreground h-4 w-4 animate-spin rounded-full border-2 border-t-transparent" />
                 ) : (
                   <MapPinIcon className="h-4 w-4" />
                 )}
                 {isDetecting ? "Определяем..." : "Определить"}
               </Button>
             )}
-            
+
             <Button
               onClick={handleOpen}
               variant="secondary"
@@ -230,7 +264,7 @@ export const UserAdressForm = ({
         >
           <div className="container flex w-full items-center justify-center px-4">
             <div className="flex w-[90%] max-w-2xl items-center justify-center">
-              <form 
+              <form
                 onSubmit={handleSubmit(handleFormSubmit)}
                 className={cn(
                   "bg-card relative flex w-full flex-col rounded-md border transition-all duration-300",
@@ -261,7 +295,9 @@ export const UserAdressForm = ({
                         {isLoadingSuggestions && <LoadingSpinner />}
 
                         {/* Иконка выпадающего списка */}
-                        {!isLoadingSuggestions && suggestions.length > 0 && <DropdownIcon />}
+                        {!isLoadingSuggestions && suggestions.length > 0 && (
+                          <DropdownIcon />
+                        )}
 
                         <button
                           type="button"
@@ -273,16 +309,20 @@ export const UserAdressForm = ({
                       </div>
 
                       {/* Выпадающий список подсказок */}
-                      {showSuggestions && suggestions.length > 0 && <SuggestionsDropdown />}
+                      {showSuggestions && suggestions.length > 0 && (
+                        <SuggestionsDropdown />
+                      )}
                     </div>
                   )}
                 />
 
                 {/* Кнопки и ошибки */}
-                <div className="border-t border-foreground/10 px-4 py-3 space-y-3">
+                <div className="border-foreground/10 space-y-3 border-t px-4 py-3">
                   {/* Сообщения об ошибках */}
                   {errors.address && (
-                    <p className="text-sm text-red-500">{errors.address.message}</p>
+                    <p className="text-sm text-red-500">
+                      {errors.address.message}
+                    </p>
                   )}
 
                   {suggestError && (
@@ -316,7 +356,7 @@ export const UserAdressForm = ({
               </form>
             </div>
           </div>
-          
+
           {/* Кликабельная область для закрытия */}
           <div className="absolute inset-0 -z-10" onClick={handleClose}></div>
         </div>

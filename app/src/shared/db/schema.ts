@@ -45,19 +45,23 @@ export const users = pgTable("user", {
 export const userCart = pgTable("cart", {
   id: text("id").primaryKey(),
   userId: text("userId").references(() => users.id, { onDelete: "cascade" }),
-  dishes: text("dishes"),
+  dishes: integer().references(() => dishes_table.id),
 });
 
 export const favorite = pgTable("favorites", {
   id: text("id").primaryKey(),
   userId: text("userId").references(() => users.id, { onDelete: "cascade" }),
-  dishId: text("dishId").references(() => dishes_table.id, { onDelete: "cascade" }),
+  dishId: integer("dishId").references(() => dishes_table.id, {
+    onDelete: "cascade",
+  }),
 });
 
 export const userCartDishes = pgTable("cart_dishes", {
   id: text("id").primaryKey(),
   cartId: text("cartId").references(() => userCart.id, { onDelete: "cascade" }),
-  dishId: text("dishId").references(() => dishes_table.id, { onDelete: "cascade" }),
+  dishId: integer("dishId").references(() => dishes_table.id, {
+    onDelete: "cascade",
+  }),
   quantity: integer("quantity").default(1).notNull(),
 });
 

@@ -28,14 +28,24 @@ const serverConfigSchema = z.object({
   GITHUB_CLIENT_SECRET: z.string().min(1, "GITHUB CLIENT SECRET is required"),
   DISCORD_CLIENT_ID: z.string().min(1, "DISCORD CLIENT ID is required"),
   DISCORD_CLIENT_SECRET: z.string().min(1, "DISCORD CLIENT SECRET is required"),
-  GEOSUGGEST_API_KEY: z.string().optional(), 
+  GEOSUGGEST_API_KEY: z.string().optional(),
 });
 
 const clientConfigSchema = z.object({
-  GEOSUGGEST_API_KEY: z.string().optional(), 
+  GEOSUGGEST_API_KEY: z.string().optional(),
 });
 
-const getServerConfig = () => {
+// Типы из схем
+type ServerConfig = z.infer<typeof serverConfigSchema>;
+type ClientConfig = z.infer<typeof clientConfigSchema>;
+
+// Расширенный тип для серверного конфига с дополнительными полями
+type EnvConfig = ServerConfig & {
+  DATABASE_URL: string;
+  ACCESS_TOKEN_KEY: string;
+};
+
+const getServerConfig = (): ServerConfig => {
   if (typeof window !== "undefined") {
     throw new Error("Server config cannot be used on the client side");
   }
@@ -61,18 +71,20 @@ const getServerConfig = () => {
   });
 };
 
-// Серверный конфиг (только для сервера)
-export const envConfig = typeof window === "undefined" ? (() => {
-  const serverConfig = getServerConfig();
-  return {
-    ...serverConfig,
-    DATABASE_URL: `postgresql://${serverConfig.DATABASE_USER}:${serverConfig.DATABASE_PASSWORD}@${serverConfig.DATABASE_HOST}:${serverConfig.DATABASE_PORT}/${serverConfig.DATABASE_DB}`,
-    ACCESS_TOKEN_KEY: "access-token",
-  };
-})() : {} as any;
+// Серверный конфиг (только для сервера) с правильными типами
+export const envConfig: EnvConfig =
+  typeof window === "undefined"
+    ? (() => {
+        const serverConfig = getServerConfig();
+        return {
+          ...serverConfig,
+          DATABASE_URL: `postgresql://${serverConfig.DATABASE_USER}:${serverConfig.DATABASE_PASSWORD}@${serverConfig.DATABASE_HOST}:${serverConfig.DATABASE_PORT}/${serverConfig.DATABASE_DB}`,
+          ACCESS_TOKEN_KEY: "access-token",
+        };
+      })()
+    : ({} as EnvConfig);
 
 // Клиентский конфиг (безопасный для клиента)
-export const envClientConfig = clientConfigSchema.parse({
+export const envClientConfig: ClientConfig = clientConfigSchema.parse({
   GEOSUGGEST_API_KEY: process.env.NEXT_PUBLIC_GEOSUGGEST_API_KEY,
 });
-

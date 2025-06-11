@@ -36,10 +36,6 @@ export const Header = () => {
             <Link href="/auth">
               <UserProfileButton />
             </Link>
-            <Button variant="outline" className="" size="lg">
-              <NavIcon icon={ShoppingCartIcon} />
-              <span className="hidden md:block">Корзина</span>
-            </Button>
           </HeaderSection>
         </HeaderContent>
       </HeaderContainer>

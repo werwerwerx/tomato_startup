@@ -76,8 +76,6 @@ export default function ProfilePage(props: IProfileProps) {
                 <AccordionContent className="w-full px-5 pb-5">
                   {item.label === "Настройки" && (
                     <div className="space-y-4">
-
-                      
                       <UserAdress />
                       {/* Уведомления */}
                       <div className="space-y-2">

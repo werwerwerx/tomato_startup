@@ -2,13 +2,8 @@ import { cn } from "@/shared/lib/utils";
 import Image from "next/image";
 import Link from "next/link";
 import { DishPreview } from "./dishes.repository";
-import { Plus } from "lucide-react";
+import { AddToCartBtn } from "./dish.add-to-cart.btn";
 
-const AddToCartStab = () => (
-  <div className="bg-primary absolute right-2 bottom-2 z-10 flex flex-row items-center justify-center rounded-full p-2">
-    <Plus className="h-5 w-5 text-white" />
-  </div>
-);
 // todo: make fugging some cool animations. card is important. people loving fugging card and touch it and shit. then they will buy stuff.
 export const DishCard = ({
   id,
@@ -18,7 +13,7 @@ export const DishCard = ({
   description,
   index,
   className,
-  addToCartBtn = <AddToCartStab />,
+  addToCartBtn,
   ...props
 }: DishPreview & {
   className?: string;
@@ -26,8 +21,7 @@ export const DishCard = ({
   index: number;
 }) => {
   return (
-    <Link
-      href={`/dishes/${id}`}
+    <div
       className={cn(
         "flex rounded-xl border shadow-sm transition-all duration-300 hover:shadow-md",
         "bg-background m-2 h-[180px] w-full flex-row overflow-hidden sm:h-[260px] sm:w-[calc(100%/2-20px)] md:w-[calc(100%/3-20px)] lg:w-[calc(100%/4-20px)] xl:w-[calc(100%/5-20px)]",
@@ -75,7 +69,9 @@ export const DishCard = ({
           </p>
         </div>
       </div>
-      {addToCartBtn}
-    </Link>
+
+      {/* Кнопка добавления в корзину */}
+      {addToCartBtn || <AddToCartBtn dishId={id} />}
+    </div>
   );
 };

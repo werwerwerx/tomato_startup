@@ -35,7 +35,7 @@ const fetchAddressSuggestions = async (
   }
 
   const apiUrl = `/api/geo-suggest?${searchParams.toString()}`;
-  
+
   try {
     const response = await fetch(apiUrl);
 
@@ -49,10 +49,11 @@ const fetchAddressSuggestions = async (
       throw new Error(data.error);
     }
 
-    const suggestions = data.results?.map((item: any) => ({
-      text: item.title?.text || item.text,
-      subtitle: item.subtitle?.text,
-    })) || [];
+    const suggestions =
+      data.results?.map((item: any) => ({
+        text: item.title?.text || item.text,
+        subtitle: item.subtitle?.text,
+      })) || [];
 
     return suggestions;
   } catch (error) {
