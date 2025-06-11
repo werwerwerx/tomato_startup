@@ -3,7 +3,7 @@ import "dotenv/config";
 import * as dotenv from "dotenv";
 dotenv.config();
 
-const configSchema = z.object({
+const serverConfigSchema = z.object({
   DATABASE_PORT: z.string().min(1, "DB PORT is required"),
   DATABASE_PASSWORD: z.string().min(1, "DB PASSWORD is required"),
   DATABASE_HOST: z.string().min(1, "DB HOST is required"),
@@ -28,10 +28,19 @@ const configSchema = z.object({
   GITHUB_CLIENT_SECRET: z.string().min(1, "GITHUB CLIENT SECRET is required"),
   DISCORD_CLIENT_ID: z.string().min(1, "DISCORD CLIENT ID is required"),
   DISCORD_CLIENT_SECRET: z.string().min(1, "DISCORD CLIENT SECRET is required"),
+  GEOSUGGEST_API_KEY: z.string().optional(), 
 });
-let parsedCnf: z.infer<typeof configSchema>;
-try {
-  parsedCnf = configSchema.parse({
+
+const clientConfigSchema = z.object({
+  GEOSUGGEST_API_KEY: z.string().optional(), 
+});
+
+const getServerConfig = () => {
+  if (typeof window !== "undefined") {
+    throw new Error("Server config cannot be used on the client side");
+  }
+
+  return serverConfigSchema.parse({
     DATABASE_PORT: process.env.POSTGRES_PORT,
     DATABASE_PASSWORD: process.env.POSTGRES_PASSWORD,
     DATABASE_HOST: process.env.POSTGRES_HOST,
@@ -48,14 +57,22 @@ try {
     GITHUB_CLIENT_SECRET: process.env.GITHUB_CLIENT_SECRET,
     DISCORD_CLIENT_ID: process.env.DISCORD_CLIENT_ID,
     DISCORD_CLIENT_SECRET: process.env.DISCORD_CLIENT_SECRET,
+    GEOSUGGEST_API_KEY: process.env.GEOSUGGEST_API_KEY,
   });
-} catch (error) {
-  console.error("Error parsing config:", error);
-  throw error;
-}
-
-export const envConfig = {
-  ...parsedCnf,
-  DATABASE_URL: `postgresql://${parsedCnf.DATABASE_USER}:${parsedCnf.DATABASE_PASSWORD}@${parsedCnf.DATABASE_HOST}:${parsedCnf.DATABASE_PORT}/${parsedCnf.DATABASE_DB}`,
-  ACCESS_TOKEN_KEY: "access-token",
 };
+
+// Серверный конфиг (только для сервера)
+export const envConfig = typeof window === "undefined" ? (() => {
+  const serverConfig = getServerConfig();
+  return {
+    ...serverConfig,
+    DATABASE_URL: `postgresql://${serverConfig.DATABASE_USER}:${serverConfig.DATABASE_PASSWORD}@${serverConfig.DATABASE_HOST}:${serverConfig.DATABASE_PORT}/${serverConfig.DATABASE_DB}`,
+    ACCESS_TOKEN_KEY: "access-token",
+  };
+})() : {} as any;
+
+// Клиентский конфиг (безопасный для клиента)
+export const envClientConfig = clientConfigSchema.parse({
+  GEOSUGGEST_API_KEY: process.env.NEXT_PUBLIC_GEOSUGGEST_API_KEY,
+});
+

@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { cn } from "../lib/utils";
 
-type CardNavSize = "md" | "lg";
+type CardNavSize = "md" | "lg" | "full";
 
 interface CardNavContainerProps extends React.HTMLAttributes<HTMLDivElement> {
   size?: CardNavSize;
@@ -16,6 +16,7 @@ export const CardNavContainer = ({
   const sizeClasses = {
     md: "max-w-sm md:max-w-md",
     lg: "max-w-sm md:max-w-md lg:max-w-lg xl:max-w-xl",
+    full: "max-w-full",
   };
 
   return (
@@ -49,6 +50,7 @@ export const CardNavRow = ({
   const sizeClasses = {
     md: "p-3",
     lg: "p-5",
+    full: "p-7",
   };
 
   return (
@@ -78,6 +80,7 @@ export const CardNavSection = ({
   const sizeClasses = {
     md: "p-3 !pb-6",
     lg: "p-5 !pb-10",
+    full: "p-7 !pb-10",
   };
 
   return (

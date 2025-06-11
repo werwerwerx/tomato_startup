@@ -44,6 +44,7 @@ export const UserProfileButton = () => {
           <CardNavContainer>
             <CardNavSection>
               <UserInfo
+                size="md"
                 user={{
                   name: session.data?.user?.name || "",
                   email: session.data?.user?.email || "",

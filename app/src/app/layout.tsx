@@ -5,6 +5,7 @@ import { Header } from "@/app/header";
 import { Container } from "@/shared/components/container";
 import { auth } from "./auth";
 import { SessionProvider } from "next-auth/react";
+import { QueryProvider } from "@/shared/lib/query-provider";
 
 export const metadata: Metadata = {
   title: "Tomato e-commerce",
@@ -41,10 +42,12 @@ export default async function RootLayout({
       <body
         className={`${comfortaaFont.className} text-foreground bg-muted h-screen w-screen overflow-x-hidden py-25 font-sans`}
       >
-        <ClientSessionProvider session={await auth()}>
-          <Header />
-          <Container>{children}</Container>
-        </ClientSessionProvider>
+        <QueryProvider>
+          <ClientSessionProvider session={await auth()}>
+            <Header />
+            <Container>{children}</Container>
+          </ClientSessionProvider>
+        </QueryProvider>
       </body>
     </html>
   );
