@@ -36,8 +36,7 @@ export default function Home() {
             <div className="hidden md:block lg:text-xl">
               <h2 className="text-md font-medium">
                 Наша миссия - создавать продукты используя наиболее качественные
-                ингредиенты.{" "}
-                <span className="">Попробуйте наши блюда</span> и
+                ингредиенты. <span className="">Попробуйте наши блюда</span> и
                 оцените качество!
               </h2>
             </div>
@@ -52,21 +51,20 @@ export default function Home() {
       </BlockHeading>
 
       <FlexColSection
-        className="h-full justify-center gap-4 md:hidden mt-10"
+        className="mt-10 h-full justify-center gap-4 md:hidden"
         id="mission-section"
       >
         <div className="flex flex-col gap-4 rounded-lg">
           <HeadingH>Наша миссия - </HeadingH>
           <HeadingP>
             это создавать продукты используя наиболее качественные ингредиенты.{" "}
-            Попробуйте наши блюда и оцените
-            качество!
+            Попробуйте наши блюда и оцените качество!
           </HeadingP>
           <div className="h-[1px] w-full bg-gray-300"></div>
         </div>
       </FlexColSection>
 
-      <FlexColSection className="h-full justify-start items-start mt-10">
+      <FlexColSection className="mt-10 h-full items-start justify-start">
         <HeadingH>Исследуйте наше меню</HeadingH>
         <HeadingP>
           Наша миссия - создавать продукты используя наиболее качественные
@@ -76,11 +74,9 @@ export default function Home() {
         <MenuList />
       </FlexColSection>
 
-      <FlexColSection className="h-full justify-start items-start mt-10">
+      <FlexColSection className="mt-10 h-full items-start justify-start">
         <HeadingH>Посмотрите наши блюда</HeadingH>
-        <HeadingP>
-          Попробуйте сначала чем мы славимся больше всего!
-        </HeadingP>
+        <HeadingP>Попробуйте сначала чем мы славимся больше всего!</HeadingP>
         <DishesPreview className="w-full" />
       </FlexColSection>
     </>

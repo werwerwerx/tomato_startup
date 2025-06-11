@@ -1,10 +1,7 @@
 "use client";
 import { cn, withDelay } from "@/shared/lib/utils";
 import { Button } from "@/shared/components/ui-kit/button";
-import {
-  SearchIcon,
-  X,
-} from "lucide-react";
+import { SearchIcon, X } from "lucide-react";
 import { useState } from "react";
 export const SearchFeature = () => {
   const [isOpen, setIsOpen] = useState(false);
@@ -22,11 +19,11 @@ export const SearchFeature = () => {
 
   return (
     <>
-    {/* default state */}
+      {/* default state */}
       <Button
         onClick={handleOpen}
         variant="outline"
-        className="hover:bg-neutral-200 !bg-background  border-md flex h-12 w-12 items-center justify-center rounded-md md:rounded-md p-0 transition-colors md:h-full md:w-full"
+        className="!bg-background border-md flex h-12 w-12 items-center justify-center rounded-md p-0 transition-colors hover:bg-neutral-200 md:h-full md:w-full md:rounded-md"
       >
         <SearchIcon className="text-foreground/80" />
         <input
@@ -41,7 +38,7 @@ export const SearchFeature = () => {
       {isOpen && (
         <div
           className={cn(
-            "bg-foreground/90 w-screen h-screen fixed inset-0 z-100 flex flex-col items-start justify-center transition-opacity duration-300 md:hidden",
+            "bg-foreground/90 fixed inset-0 z-100 flex h-screen w-screen flex-col items-start justify-center transition-opacity duration-300 md:hidden",
             isOpen ? "opacity-100" : "opacity-0",
           )}
         >

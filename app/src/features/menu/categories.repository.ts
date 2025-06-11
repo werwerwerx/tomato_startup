@@ -6,7 +6,7 @@ export type MenuItem = {
   id: number;
   name: string;
   img_url: string | null;
-}
+};
 
 export const getMenuItems = async (): Promise<MenuItem[]> => {
   return await db

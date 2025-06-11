@@ -3,16 +3,18 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "next dev",
+    "dev": "next dev --turbopack",
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
     "clean-db": "tsx src/shared/db/cleanup.ts",
-    "seed": "tsx src/shared/db/seed.ts"
+    "seed": "tsx src/shared/db/seed.ts",
+    "format": "prettier --write ."
   },
   "dependencies": {
     "@auth/drizzle-adapter": "^1.9.1",
     "@hookform/resolvers": "^5.1.0",
+    "@radix-ui/react-accordion": "^1.2.11",
     "@radix-ui/react-dropdown-menu": "^2.1.15",
     "@radix-ui/react-separator": "^1.1.7",
     "@radix-ui/react-slot": "^1.2.3",

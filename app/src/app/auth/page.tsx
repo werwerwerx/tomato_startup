@@ -8,12 +8,14 @@ import { Separator } from "@/shared/components/ui-kit/separator";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { FaGithub, FaDiscord, FaYandex } from "react-icons/fa";
+import { useState } from "react";
 
 interface LoginFormData {
   email: string;
 }
 
 export default function AuthPage() {
+  const [loadingProvider, setLoadingProvider] = useState<string | null>(null);
   const {
     register,
     handleSubmit,
@@ -24,9 +26,20 @@ export default function AuthPage() {
     },
   });
 
-  const onSubmit = async (data: LoginFormData) => {
+  const handleProviderSignIn = async (provider: string) => {
     try {
-      await signIn("resend", {
+      setLoadingProvider(provider);
+      await signIn(provider, { redirectTo: "/profile" });
+    } catch (error) {
+      console.error(error);
+    } finally {
+      setLoadingProvider(null);
+    }
+  };
+
+  const onSubmit = (data: LoginFormData) => {
+    try {
+      signIn("resend", {
         email: data.email,
         redirect: false,
       });
@@ -82,11 +95,14 @@ export default function AuthPage() {
             type="button"
             variant="outline"
             className="!bg-foreground/90 !text-background w-full cursor-pointer"
-            onClick={async () => {
-              await signIn("yandex");
-            }}
+            disabled={loadingProvider === "yandex"}
+            onClick={() => handleProviderSignIn("yandex")}
           >
-            <FaYandex className="mr-2 h-4 w-4" />
+            {loadingProvider === "yandex" ? (
+              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+            ) : (
+              <FaYandex className="mr-2 h-4 w-4" />
+            )}
             Яндекс
           </Button>
           <div className="flex w-full flex-row gap-2">
@@ -94,22 +110,28 @@ export default function AuthPage() {
               type="button"
               variant="outline"
               className="flex-1 cursor-pointer"
-              onClick={async () => {
-                await signIn("github");
-              }}
+              disabled={loadingProvider === "github"}
+              onClick={() => handleProviderSignIn("github")}
             >
-              <FaGithub className="mr-2 h-4 w-4" />
+              {loadingProvider === "github" ? (
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              ) : (
+                <FaGithub className="mr-2 h-4 w-4" />
+              )}
               GitHub
             </Button>
             <Button
               type="button"
               variant="outline"
               className="flex-1 cursor-pointer"
-              onClick={async () => {
-                await signIn("discord");
-              }}
+              disabled={loadingProvider === "discord"}
+              onClick={() => handleProviderSignIn("discord")}
             >
-              <FaDiscord className="mr-2 h-4 w-4" />
+              {loadingProvider === "discord" ? (
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              ) : (
+                <FaDiscord className="mr-2 h-4 w-4" />
+              )}
               Discord
             </Button>
           </div>
@@ -154,9 +176,7 @@ const EmailFormInput = ({
           {...props}
         />
       </div>
-      {error && (
-        <div className="text-destructive text-sm mt-1">{error}</div>
-      )}
+      {error && <div className="text-destructive mt-1 text-sm">{error}</div>}
     </div>
   );
 };

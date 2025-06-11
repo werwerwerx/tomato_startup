@@ -44,6 +44,7 @@ export const DishCard = ({
           className="object-cover transition-all duration-300 group-hover:scale-105"
           loading="lazy"
           fill
+          sizes="(max-width: 640px) 50vw, (max-width: 768px) 33vw, (max-width: 1024px) 25vw, 20vw"
         />
       </div>
 
@@ -78,5 +79,3 @@ export const DishCard = ({
     </Link>
   );
 };
-
-

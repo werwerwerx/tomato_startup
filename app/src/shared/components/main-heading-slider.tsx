@@ -56,14 +56,14 @@ export const BlockHeading = ({
               transition: "transform 0.5s ease-out",
             }}
           >
-              <Image
-                src={image.src}
-                fill
-                alt={`Слайд ${index + 1}`}
-                className="object-cover"
-                priority={index === 0 ? true : false}
-                quality={100}
-              />
+            <Image
+              src={image.src}
+              fill
+              alt={`Слайд ${index + 1}`}
+              className="object-cover"
+              priority={index === 0 ? true : false}
+              quality={100}
+            />
           </div>
         ))}
       </div>

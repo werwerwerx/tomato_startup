@@ -14,7 +14,10 @@ const configSchema = z.object({
     process.env.NODE_ENV === "production"
       ? z.string().min(1, "APP URL is required")
       : z.string().min(1).default("http://localhost:3000"),
-  IS_HTTPS: process.env.NODE_ENV === "production" ? z.boolean().default(true) : z.boolean().default(false),
+  IS_HTTPS:
+    process.env.NODE_ENV === "production"
+      ? z.boolean().default(true)
+      : z.boolean().default(false),
   NODE_ENV: z.enum(["production", "development"], {
     errorMap: () => ({ message: "NODE_ENV is required" }),
   }),
@@ -25,7 +28,7 @@ const configSchema = z.object({
   GITHUB_CLIENT_SECRET: z.string().min(1, "GITHUB CLIENT SECRET is required"),
   DISCORD_CLIENT_ID: z.string().min(1, "DISCORD CLIENT ID is required"),
   DISCORD_CLIENT_SECRET: z.string().min(1, "DISCORD CLIENT SECRET is required"),
-})
+});
 let parsedCnf: z.infer<typeof configSchema>;
 try {
   parsedCnf = configSchema.parse({

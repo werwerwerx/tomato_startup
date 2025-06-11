@@ -2,10 +2,10 @@ import NextAuth from "next-auth";
 import YandexProvider from "next-auth/providers/yandex";
 import { envConfig } from "@/shared/lib/config";
 import db from "@/shared/db";
-import { DrizzleAdapter } from "@auth/drizzle-adapter"
-import Resend from "next-auth/providers/resend"
-import DiscordProvider from "next-auth/providers/discord"
-import GithubProvider from "next-auth/providers/github" 
+import { DrizzleAdapter } from "@auth/drizzle-adapter";
+import Resend from "next-auth/providers/resend";
+import DiscordProvider from "next-auth/providers/discord";
+import GithubProvider from "next-auth/providers/github";
 
 declare module "next-auth" {
   interface Session {
@@ -14,7 +14,7 @@ declare module "next-auth" {
       email: string;
       name: string;
       image?: string;
-    }
+    };
   }
 }
 
@@ -42,4 +42,4 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
     signIn: "/auth/login",
     signOut: "/",
   },
-})
+});

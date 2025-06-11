@@ -10,7 +10,7 @@ import {
   X,
 } from "lucide-react";
 import Link from "next/link";
-import {  useState } from "react";
+import { useState } from "react";
 import { usePathname } from "next/navigation";
 import { foregroundStyles, HeaderContainer, HeaderSection } from "@/app/header";
 
@@ -167,7 +167,12 @@ export const NavBarBottom = () => {
   const pathname = usePathname();
 
   return (
-    <HeaderContainer className={cn("fixed bottom-0 z-50 rounded-t-lg border-t", foregroundStyles)}>
+    <HeaderContainer
+      className={cn(
+        "fixed bottom-0 z-20 rounded-t-lg border-t md:hidden",
+        foregroundStyles,
+      )}
+    >
       <div className="container flex h-20 flex-row items-center">
         {bottomNavItems.map((item) => {
           const isActive = pathname === item.href;

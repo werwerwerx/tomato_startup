@@ -9,5 +9,12 @@ export const ImageUnkownSize = ({
   alt: string;
   className?: string;
 }) => (
-  <Image src={src} alt={alt} className={className} width={0} height={0} sizes="100vw" />
+  <Image
+    src={src}
+    alt={alt}
+    className={className}
+    width={0}
+    height={0}
+    sizes="100vw"
+  />
 );

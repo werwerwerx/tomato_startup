@@ -21,7 +21,13 @@ const comfortaaFont = Comfortaa({
   display: "swap",
 });
 
-function ClientSessionProvider({ children, session }: { children: React.ReactNode, session: any }) {
+function ClientSessionProvider({
+  children,
+  session,
+}: {
+  children: React.ReactNode;
+  session: any;
+}) {
   return <SessionProvider session={session}>{children}</SessionProvider>;
 }
 
@@ -31,9 +37,9 @@ export default async function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className="overflow-x-hidden light">
+    <html lang="en" className="light overflow-x-hidden">
       <body
-        className={`${comfortaaFont.className} text-foreground bg-muted w-screen h-screen overflow-x-hidden font-sans py-25`}
+        className={`${comfortaaFont.className} text-foreground bg-muted h-screen w-screen overflow-x-hidden py-25 font-sans`}
       >
         <ClientSessionProvider session={await auth()}>
           <Header />

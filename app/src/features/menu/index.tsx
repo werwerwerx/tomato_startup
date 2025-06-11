@@ -36,12 +36,12 @@ export const MenuList = async ({
   );
 };
 
-export const MenuListTopBar =  ({items}: {items: MenuItem[]}) => {
+export const MenuListTopBar = ({ items }: { items: MenuItem[] }) => {
   return (
     <MenuListTopBarContainer>
       <FlexRowSection>
-        <Carousel 
-          className="w-full" 
+        <Carousel
+          className="w-full"
           opts={{
             align: "start",
           }}
@@ -50,15 +50,15 @@ export const MenuListTopBar =  ({items}: {items: MenuItem[]}) => {
             {items.map((item) => (
               <CarouselItem
                 key={item.id}
-                className="pl-2 basis-1/3 sm:basis-1/4 md:basis-1/5 lg:basis-1/6"
+                className="basis-1/3 pl-2 sm:basis-1/4 md:basis-1/5 lg:basis-1/6"
               >
                 <div className="p-1">
                   <Link
                     href={`#${item.name}`}
                     className={cn(
-                      "group flex items-center gap-2 rounded-lg border bg-card p-2",
-                      "transition-all duration-300 hover:bg-accent",
-                      "shadow-lg shadow-neutral-300/50"
+                      "group bg-card flex items-center gap-2 rounded-lg border p-2",
+                      "hover:bg-accent transition-all duration-300",
+                      "shadow-lg shadow-neutral-300/50",
                     )}
                   >
                     <div className="relative h-8 w-8 shrink-0 overflow-hidden rounded-md">
@@ -67,9 +67,10 @@ export const MenuListTopBar =  ({items}: {items: MenuItem[]}) => {
                         alt={item.name}
                         fill
                         className="object-cover"
+                        sizes="32px"
                       />
                     </div>
-                    <span className="text-sm font-medium line-clamp-1 text-foreground/80 group-hover:text-foreground">
+                    <span className="text-foreground/80 group-hover:text-foreground line-clamp-1 text-sm font-medium">
                       {item.name}
                     </span>
                   </Link>

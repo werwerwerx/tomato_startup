@@ -12,7 +12,8 @@ export const getDishes = async (): Promise<DishPreview[]> => {
       imageUrl: img_table.url,
       category: dishes_table.categoryId,
     })
-    .from(dishes_table).limit(17)
+    .from(dishes_table)
+    .limit(17)
     .leftJoin(img_table, eq(dishes_table.imgId, img_table.id));
   return dishes.map((dish) => ({
     id: dish.id,

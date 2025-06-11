@@ -6,11 +6,10 @@ import {
   primaryKey,
   integer,
   serial,
-} from "drizzle-orm/pg-core"
-import postgres from "postgres"
-import { drizzle } from "drizzle-orm/postgres-js"
-import type { AdapterAccount } from "next-auth/adapters"
-
+} from "drizzle-orm/pg-core";
+import postgres from "postgres";
+import { drizzle } from "drizzle-orm/postgres-js";
+import type { AdapterAccount } from "next-auth/adapters";
 
 export const categories_table = pgTable("categories", {
   id: serial("id").primaryKey(),
@@ -23,7 +22,6 @@ export const img_table = pgTable("img", {
   url: text("url").unique(),
 });
 
-
 export const dishes_table = pgTable("dishes", {
   id: serial("id").primaryKey(),
   name: text("name").notNull().unique(),
@@ -31,7 +29,7 @@ export const dishes_table = pgTable("dishes", {
   price: integer("price").notNull(),
   imgId: integer("imgId").references(() => img_table.id),
   categoryId: integer("categoryId").references(() => categories_table.id),
-})
+});
 
 export const users = pgTable("user", {
   id: text("id")
@@ -41,8 +39,8 @@ export const users = pgTable("user", {
   email: text("email").unique(),
   emailVerified: timestamp("emailVerified", { mode: "date" }),
   image: text("image"),
-})
- 
+});
+
 export const accounts = pgTable(
   "account",
   {
@@ -66,17 +64,17 @@ export const accounts = pgTable(
         columns: [account.provider, account.providerAccountId],
       }),
     },
-  ]
-)
- 
+  ],
+);
+
 export const sessions = pgTable("session", {
   sessionToken: text("sessionToken").primaryKey(),
   userId: text("userId")
     .notNull()
     .references(() => users.id, { onDelete: "cascade" }),
   expires: timestamp("expires", { mode: "date" }).notNull(),
-})
- 
+});
+
 export const verificationTokens = pgTable(
   "verificationToken",
   {
@@ -90,9 +88,9 @@ export const verificationTokens = pgTable(
         columns: [verificationToken.identifier, verificationToken.token],
       }),
     },
-  ]
-)
- 
+  ],
+);
+
 export const authenticators = pgTable(
   "authenticator",
   {
@@ -113,5 +111,5 @@ export const authenticators = pgTable(
         columns: [authenticator.userId, authenticator.credentialID],
       }),
     },
-  ]
-)
+  ],
+);
