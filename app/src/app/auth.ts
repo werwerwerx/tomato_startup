@@ -13,6 +13,8 @@ declare module "next-auth" {
       id: number;
       email: string;
       name: string;
+      adress: string | undefined;
+      
       image?: string;
     };
   }
