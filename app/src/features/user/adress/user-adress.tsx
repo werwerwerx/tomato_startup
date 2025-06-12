@@ -1,22 +1,24 @@
 "use client";
+
 import { UserAdressForm } from "./user-adress-form";
-import { useSession } from "next-auth/react";
+import { useUserAddress } from "../hooks/use-user-address";
 
-export const UserAdress = () => {
-  const { data: session } = useSession();
+export interface UserAdressProps {
+  enableGeolocation?: boolean;
+}
 
-  const handleAddressChange = async (newAddress: string) => {
-    // Дополнительная логика при изменении адреса (если нужно)
-    console.log("Адрес обновлен:", newAddress);
-  };
+export const UserAdress = ({
+  enableGeolocation = true,
+}: UserAdressProps = {}) => {
+  const { currentAddress, updateAddress, isUpdating, error } = useUserAddress();
 
   return (
     <UserAdressForm
-      initialAddress={
-        session?.user?.adress || "Вы ещё не указали адрес доставки"
-      }
-      onAddressChange={handleAddressChange}
-      enableGeolocation={true}
+      currentAddress={currentAddress}
+      onAddressChange={updateAddress}
+      isUpdating={isUpdating}
+      error={error}
+      enableGeolocation={enableGeolocation}
     />
   );
 };

@@ -1,9 +1,10 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useCallback, useRef, useEffect } from "react";
-import { syncCart } from "../api";
+import { syncCart, clearCart as clearCartAPI } from "../api";
 
 const CART_KEY = "CART";
 const CART_QUERY_KEY = ["cart"];
+const CART_DISHES_QUERY_KEY = ["cart-dishes"];
 const SYNC_DELAY_MS = 1000;
 
 const getCartLocal = () => JSON.parse(localStorage.getItem(CART_KEY) || "{}");
@@ -29,6 +30,20 @@ export const useCart = () => {
     },
     onSettled: () => {
       pendingSyncRef.current = false;
+      queryClient.invalidateQueries({ queryKey: CART_DISHES_QUERY_KEY });
+    },
+  });
+
+  const clearMutation = useMutation({
+    mutationFn: clearCartAPI,
+    onSuccess: () => {
+      clearCartLocal();
+      queryClient.setQueryData(CART_QUERY_KEY, {});
+      queryClient.invalidateQueries({ queryKey: CART_DISHES_QUERY_KEY });
+      if (syncTimeoutRef.current) {
+        clearTimeout(syncTimeoutRef.current);
+        syncTimeoutRef.current = null;
+      }
     },
   });
 
@@ -91,12 +106,8 @@ export const useCart = () => {
   }, [cart, syncMutation]);
 
   const clearCart = useCallback(() => {
-    if (syncTimeoutRef.current) {
-      clearTimeout(syncTimeoutRef.current);
-    }
-    clearCartLocal();
-    queryClient.setQueryData(CART_QUERY_KEY, {});
-  }, [queryClient]);
+    clearMutation.mutate();
+  }, [clearMutation]);
 
   return {
     getItemQuantity: (dishId: number) => cart[dishId] || 0,
@@ -108,7 +119,7 @@ export const useCart = () => {
       })),
     forceSyncNow,
     clearCart,
-    isLoading: syncMutation.isPending,
+    isLoading: syncMutation.isPending || clearMutation.isPending,
     hasPendingSync: !!syncTimeoutRef.current,
   };
 };

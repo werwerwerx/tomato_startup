@@ -1,167 +1,100 @@
 "use client";
 
-import { EditIcon, MapPinIcon, ChevronDownIcon, X } from "lucide-react";
+import { EditIcon, MapPinIcon, X } from "lucide-react";
 import { Button } from "@/shared/components/ui-kit/button";
-import React from "react";
-import { useForm, Controller } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { z } from "zod";
-import { useDebounce } from "use-debounce";
-import { cn, withDelay } from "@/shared/lib/utils";
-import {
-  useGeoSuggest,
-  AddressSuggestion,
-} from "@/shared/hooks/use-geo-suggest";
-
-// Схема валидации адреса
-const addressSchema = z.object({
-  address: z
-    .string()
-    .min(5, "Адрес должен содержать минимум 5 символов")
-    .max(100, "Адрес не должен превышать 100 символов"),
-});
-
-type AddressFormData = z.infer<typeof addressSchema>;
-
-interface UserAddressProps {
-  initialAddress?: string;
-  onAddressChange?: (newAddress: string) => Promise<void>;
-  enableGeolocation?: boolean; // Новая фича для определения местоположения
-}
-
-const DEFAULT_ADDRESS = "Вы ещё не указали адрес доставки";
+import React, { useState } from "react";
+import { useDetectUserGeo } from "../hooks/use-detect-user-geo";
+import { useAddressSuggestions } from "../hooks/use-address-suggestions";
+import { useAddressForm } from "../hooks/use-address-form";
 
 export const UserAdressForm = ({
-  initialAddress = DEFAULT_ADDRESS,
+  currentAddress,
   onAddressChange,
-  enableGeolocation = true, // По умолчанию включена
-}: UserAddressProps) => {
-  // Состояние компонента
-  const [isEditing, setIsEditing] = React.useState(false);
-  const [isInputVisible, setIsInputVisible] = React.useState(false);
-  const [currentAddress, setCurrentAddress] = React.useState(initialAddress);
-  const [showSuggestions, setShowSuggestions] = React.useState(false);
-  const [isDetecting, setIsDetecting] = React.useState(false); // Для индикатора загрузки
-
-  // Настройка формы с валидацией
-  const form = useForm<AddressFormData>({
-    resolver: zodResolver(addressSchema),
-    defaultValues: {
-      address: currentAddress === DEFAULT_ADDRESS ? "" : currentAddress,
-    },
-  });
-
-  const { control, handleSubmit, reset, setValue, watch, formState } = form;
-  const { errors, isSubmitting } = formState;
-
-  const watchedAddress = watch("address");
-
-  const [debouncedQuery] = useDebounce(watchedAddress || "", 300);
+  isUpdating,
+  error: updateError,
+  enableGeolocation = true,
+}: {
+  currentAddress: string;
+  onAddressChange: (newAddress: string) => Promise<void>;
+  isUpdating: boolean;
+  error: string | null;
+  enableGeolocation?: boolean;
+}) => {
+  const [inputValue, setInputValue] = useState("");
+  const [validationError, setValidationError] = useState("");
 
   const {
-    data: suggestions = [],
+    isEditing,
+    isSubmitting,
+    openEditor,
+    closeEditor,
+    submitAddress,
+  } = useAddressForm({
+    onSubmit: onAddressChange,
+  });
+
+  const { isDetecting, detectLocation } = useDetectUserGeo();
+
+  const {
+    suggestions,
     isLoading: isLoadingSuggestions,
     error: suggestError,
-  } = useGeoSuggest(debouncedQuery, {
+    showSuggestions,
+    setShowSuggestions,
+    handleSuggestionClick,
+  } = useAddressSuggestions({
+    query: inputValue,
+    isEnabled: isEditing,
     maxResults: 5,
     types: ["house", "street"],
   });
 
-  React.useEffect(() => {
-    const shouldShow =
-      isEditing &&
-      suggestions.length > 0 &&
-      Boolean(watchedAddress) &&
-      watchedAddress.length >= 3;
-
-    setShowSuggestions(shouldShow);
-  }, [suggestions, isEditing, watchedAddress]);
-
-  const handleFormSubmit = async (data: AddressFormData) => {
-    try {
-      // Отправляем запрос на обновление адреса
-      const response = await fetch("/api/user/adress", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ adress: data.address }),
-      });
-
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || "Ошибка при обновлении адреса");
-      }
-
-      const result = await response.json();
-
-      // Обновляем локальное состояние
-      setCurrentAddress(data.address);
-      handleClose();
-
-      // Вызываем callback если передан
-      if (onAddressChange) {
-        await onAddressChange(data.address);
-      }
-
-      // Если API сигнализирует о необходимости обновления сессии
-      if (result.shouldRefreshSession) {
-        // Обновляем страницу для получения новой сессии
-        window.location.reload();
-      }
-
-      reset({ address: data.address });
-    } catch (error) {
-      console.error("Ошибка при обновлении адреса:", error);
-      // Можно добавить toast уведомление об ошибке
-      alert(error instanceof Error ? error.message : "Произошла ошибка");
-    }
-  };
-
-  // Заглушка для определения местоположения
   const handleDetectLocation = async () => {
-    setIsDetecting(true);
-
     try {
-      // Здесь будет логика определения местоположения
-      await new Promise((resolve) => setTimeout(resolve, 2000)); // Имитация запроса
-
-      // Заглушка - устанавливаем тестовый адрес
-      const detectedAddress = "г. Москва, ул. Тверская, д. 1";
-      setCurrentAddress(detectedAddress);
-
-      if (onAddressChange) {
+      const detectedAddress = await detectLocation();
+      if (detectedAddress) {
         await onAddressChange(detectedAddress);
       }
-
-      console.log("Местоположение определено (заглушка):", detectedAddress);
     } catch (error) {
-      console.error("Ошибка определения местоположения:", error);
-    } finally {
-      setIsDetecting(false);
+      console.error("Ошибка при определении местоположения:", error);
     }
   };
 
-  const handleOpen = () => {
-    setIsEditing(true);
-    withDelay(() => setIsInputVisible(true));
+  const handleOpenEditor = () => {
+    setInputValue(currentAddress === "Вы ещё не указали адрес доставки" ? "" : currentAddress);
+    setValidationError("");
+    openEditor();
   };
 
-  const handleClose = () => {
-    setIsInputVisible(false);
-    setShowSuggestions(false);
-    withDelay(() => {
-      setIsEditing(false);
-      // Возвращаем предыдущее значение если отменили
-      const previousValue =
-        currentAddress === DEFAULT_ADDRESS ? "" : currentAddress;
-      reset({ address: previousValue });
-    });
+  const handleCloseEditor = () => {
+    setInputValue("");
+    setValidationError("");
+    closeEditor();
   };
 
-  const handleSuggestionClick = (suggestion: AddressSuggestion) => {
-    setValue("address", suggestion.text);
-    setShowSuggestions(false);
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    if (!inputValue.trim()) {
+      setValidationError("Адрес не может быть пустым");
+      return;
+    }
+    
+    if (inputValue.length < 5) {
+      setValidationError("Адрес должен содержать минимум 5 символов");
+      return;
+    }
+    
+    if (inputValue.length > 100) {
+      setValidationError("Адрес не должен превышать 100 символов");
+      return;
+    }
+
+    try {
+      await submitAddress(inputValue);
+    } catch (error) {
+      setValidationError(error instanceof Error ? error.message : "Произошла ошибка");
+    }
   };
 
   const handleInputFocus = () => {
@@ -171,19 +104,20 @@ export const UserAdressForm = ({
   };
 
   const handleInputBlur = () => {
-    setTimeout(() => {
-      setShowSuggestions(false);
-    }, 150);
+    setTimeout(() => setShowSuggestions(false), 150);
+  };
+
+  const handleSuggestionSelect = (suggestion: any) => {
+    handleSuggestionClick(suggestion, (text: string) => {
+      setInputValue(text);
+      setValidationError("");
+    });
   };
 
   const LoadingSpinner = () => (
     <div className="absolute top-1/2 right-12 -translate-y-1/2">
       <div className="border-foreground/20 border-t-foreground h-4 w-4 animate-spin rounded-full border-2" />
     </div>
-  );
-
-  const DropdownIcon = () => (
-    <ChevronDownIcon className="text-foreground/60 absolute top-1/2 right-12 h-4 w-4 -translate-y-1/2" />
   );
 
   const SuggestionsDropdown = () => (
@@ -193,13 +127,11 @@ export const UserAdressForm = ({
           key={index}
           type="button"
           className="border-foreground/10 hover:bg-foreground/5 w-full border-b px-3 py-2 text-left text-sm last:border-b-0"
-          onClick={() => handleSuggestionClick(suggestion)}
+          onClick={() => handleSuggestionSelect(suggestion)}
         >
           <div className="text-foreground">{suggestion.text}</div>
           {suggestion.subtitle && (
-            <div className="text-foreground/60 text-xs">
-              {suggestion.subtitle}
-            </div>
+            <div className="text-foreground/60 text-xs">{suggestion.subtitle}</div>
           )}
         </button>
       ))}
@@ -208,9 +140,7 @@ export const UserAdressForm = ({
 
   return (
     <>
-      {/* Обычное состояние */}
       <div className="relative space-y-2">
-        {/* Заголовок секции */}
         <div className="flex items-center gap-2">
           <MapPinIcon className="text-foreground h-4 w-4" />
           <h4 className="text-foreground text-base font-semibold">
@@ -218,11 +148,13 @@ export const UserAdressForm = ({
           </h4>
         </div>
 
-        {/* Отображение текущего адреса */}
         <div className="flex w-full flex-col gap-2">
           <p className="text-foreground/80 text-sm">{currentAddress}</p>
 
-          {/* Кнопки управления */}
+          {updateError && (
+            <p className="text-sm text-red-500">{updateError}</p>
+          )}
+
           <div className="flex w-full gap-2">
             {enableGeolocation && (
               <Button
@@ -230,7 +162,7 @@ export const UserAdressForm = ({
                 variant="default"
                 size="sm"
                 className="flex-1 gap-2"
-                disabled={isDetecting}
+                disabled={isDetecting || isUpdating}
               >
                 {isDetecting ? (
                   <div className="border-primary-foreground h-4 w-4 animate-spin rounded-full border-2 border-t-transparent" />
@@ -242,10 +174,11 @@ export const UserAdressForm = ({
             )}
 
             <Button
-              onClick={handleOpen}
+              onClick={handleOpenEditor}
               variant="secondary"
               size="sm"
               className="flex-1 gap-2"
+              disabled={isUpdating}
             >
               <EditIcon className="h-4 w-4" />
               Изменить
@@ -254,75 +187,50 @@ export const UserAdressForm = ({
         </div>
       </div>
 
-      {/* Полноэкранный режим редактирования */}
       {isEditing && (
-        <div
-          className={cn(
-            "bg-foreground/90 fixed inset-0 z-[100] flex h-screen w-screen flex-col items-center justify-center transition-opacity duration-300",
-            isEditing ? "opacity-100" : "opacity-0",
-          )}
-        >
-          <div className="container flex w-full items-center justify-center px-4">
-            <div className="flex w-[90%] max-w-2xl items-center justify-center">
-              <form
-                onSubmit={handleSubmit(handleFormSubmit)}
-                className={cn(
-                  "bg-card relative flex w-full flex-col rounded-md border transition-all duration-300",
-                  isInputVisible ? "opacity-100" : "opacity-0",
-                )}
-              >
-                <Controller
-                  name="address"
-                  control={control}
-                  render={({ field }) => (
-                    <div className="relative">
-                      <div className="flex items-center px-4 py-3">
-                        <MapPinIcon
-                          size={20}
-                          className="text-foreground/60 mr-3 shrink-0"
-                        />
-                        <input
-                          {...field}
-                          type="text"
-                          placeholder="Введите адрес доставки..."
-                          className="placeholder:text-foreground/60 h-full w-full bg-transparent text-base outline-none"
-                          onFocus={handleInputFocus}
-                          onBlur={handleInputBlur}
-                          autoFocus
-                        />
+        <div className="bg-foreground/90 fixed inset-0 z-[100] flex h-screen w-screen items-center justify-center">
+          <div className="container px-4">
+            <div className="mx-auto w-full max-w-2xl">
+              <form onSubmit={handleSubmit} className="bg-card relative rounded-md border">
+                <div className="relative">
+                  <div className="flex items-center px-4 py-3">
+                    <MapPinIcon
+                      size={20}
+                      className="text-foreground/60 mr-3 shrink-0"
+                    />
+                    <input
+                      value={inputValue}
+                      onChange={(e) => {
+                        setInputValue(e.target.value);
+                        setValidationError("");
+                      }}
+                      type="text"
+                      placeholder="Введите адрес доставки..."
+                      className="placeholder:text-foreground/60 h-full w-full bg-transparent text-base outline-none"
+                      onFocus={handleInputFocus}
+                      onBlur={handleInputBlur}
+                      autoFocus
+                    />
 
-                        {/* Индикатор загрузки */}
-                        {isLoadingSuggestions && <LoadingSpinner />}
+                    {isLoadingSuggestions && <LoadingSpinner />}
 
-                        {/* Иконка выпадающего списка */}
-                        {!isLoadingSuggestions && suggestions.length > 0 && (
-                          <DropdownIcon />
-                        )}
+                    <button
+                      type="button"
+                      onClick={handleCloseEditor}
+                      className="hover:bg-foreground/5 ml-4 rounded-full p-2 transition-colors"
+                    >
+                      <X size={20} className="text-foreground/80" />
+                    </button>
+                  </div>
 
-                        <button
-                          type="button"
-                          onClick={handleClose}
-                          className="hover:bg-foreground/5 ml-4 rounded-full p-2 transition-colors"
-                        >
-                          <X size={20} className="text-foreground/80" />
-                        </button>
-                      </div>
-
-                      {/* Выпадающий список подсказок */}
-                      {showSuggestions && suggestions.length > 0 && (
-                        <SuggestionsDropdown />
-                      )}
-                    </div>
+                  {showSuggestions && suggestions.length > 0 && (
+                    <SuggestionsDropdown />
                   )}
-                />
+                </div>
 
-                {/* Кнопки и ошибки */}
                 <div className="border-foreground/10 space-y-3 border-t px-4 py-3">
-                  {/* Сообщения об ошибках */}
-                  {errors.address && (
-                    <p className="text-sm text-red-500">
-                      {errors.address.message}
-                    </p>
+                  {validationError && (
+                    <p className="text-sm text-red-500">{validationError}</p>
                   )}
 
                   {suggestError && (
@@ -331,23 +239,23 @@ export const UserAdressForm = ({
                     </p>
                   )}
 
-                  {/* Кнопки управления */}
                   <div className="flex gap-2">
                     <Button
                       type="submit"
                       variant="secondary"
                       size="sm"
                       className="flex-1"
-                      disabled={isSubmitting}
+                      disabled={isSubmitting || isUpdating}
                     >
-                      Сохранить
+                      {isSubmitting || isUpdating ? "Сохранение..." : "Сохранить"}
                     </Button>
                     <Button
                       type="button"
-                      onClick={handleClose}
+                      onClick={handleCloseEditor}
                       variant="outline"
                       size="sm"
                       className="flex-1"
+                      disabled={isSubmitting || isUpdating}
                     >
                       Отмена
                     </Button>
@@ -357,8 +265,7 @@ export const UserAdressForm = ({
             </div>
           </div>
 
-          {/* Кликабельная область для закрытия */}
-          <div className="absolute inset-0 -z-10" onClick={handleClose}></div>
+          <div className="absolute inset-0 -z-10" onClick={handleCloseEditor}></div>
         </div>
       )}
     </>

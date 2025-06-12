@@ -23,3 +23,11 @@ export const syncCart = async (
   });
   return response.json();
 };
+
+export const clearCart = async () => {
+  const response = await fetch("/api/user/cart/clear", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+  });
+  return response.json();
+};

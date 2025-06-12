@@ -11,25 +11,46 @@ interface Dish {
   image: string;
 }
 
-const fetchDishById = async (dishId: number): Promise<Dish> => {
-  const response = await fetch(`/api/dishes/${dishId}`);
+interface CartItem {
+  dishId: number;
+  quantity: number;
+  dish: Dish;
+}
+
+const fetchCartDishes = async (): Promise<CartItem[]> => {
+  const response = await fetch("/api/user/cart/dishes");
   if (!response.ok) {
-    throw new Error('Failed to fetch dish');
+    throw new Error("Failed to fetch cart dishes");
   }
-  return response.json();
+  const data = await response.json();
+  return data.cartItems || [];
 };
 
 export const ListCart = () => {
+  const { getCartItems, updateQuantity, clearCart, isLoading } = useCart();
+  
   const {
-    getCartItems,
-    updateQuantity,
-    clearCart,
-    isLoading
-  } = useCart();
+    data: serverCartItems = [],
+    isLoading: isLoadingDishes,
+    error,
+  } = useQuery({
+    queryKey: ["cart-dishes"],
+    queryFn: fetchCartDishes,
+    staleTime: 2 * 60 * 1000,
+  });
 
-  const cartItems = getCartItems();
+  const localCartItems = getCartItems();
 
-  if (cartItems.length === 0) {
+  if (isLoadingDishes) {
+    return (
+      <div className="flex flex-col items-center justify-center py-12 text-center">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900"></div>
+        <p className="mt-2 text-sm text-gray-500">Загрузка корзины...</p>
+      </div>
+    );
+  }
+
+  if (error || (!isLoadingDishes && serverCartItems.length === 0 && localCartItems.length === 0)) {
     return (
       <div className="flex flex-col items-center justify-center py-12 text-center">
         <ShoppingBag className="mb-4 h-16 w-16 text-gray-300" />
@@ -43,14 +64,29 @@ export const ListCart = () => {
     );
   }
 
+  const combinedItems = new Map<number, CartItem>();
+  
+  serverCartItems.forEach(item => {
+    combinedItems.set(item.dishId, item);
+  });
+
+  localCartItems.forEach(localItem => {
+    const existing = combinedItems.get(localItem.dishId);
+    if (existing) {
+      combinedItems.set(localItem.dishId, {
+        ...existing,
+        quantity: Math.max(existing.quantity, localItem.quantity),
+      });
+    }
+  });
+
+  const cartItems = Array.from(combinedItems.values());
   const totalItems = cartItems.reduce((sum, item) => sum + item.quantity, 0);
 
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
-        <h3 className="text-lg font-semibold">
-          Корзина ({totalItems})
-        </h3>
+        <h3 className="text-lg font-semibold">Корзина ({totalItems})</h3>
         {cartItems.length > 0 && (
           <Button
             variant="outline"
@@ -66,12 +102,13 @@ export const ListCart = () => {
       </div>
 
       <div className="grid gap-4">
-        {cartItems.map(({ dishId, quantity }, index) => (
+        {cartItems.map((item, index) => (
           <CartItem
-            key={`cart-${dishId}-${index}`}
-            dishId={dishId}
-            quantity={quantity}
-            onUpdateQuantity={(newQuantity) => updateQuantity(dishId, newQuantity)}
+            key={`cart-${item.dishId}-${index}`}
+            item={item}
+            onUpdateQuantity={(newQuantity) =>
+              updateQuantity(item.dishId, newQuantity)
+            }
             isLoading={isLoading}
           />
         ))}
@@ -81,72 +118,21 @@ export const ListCart = () => {
 };
 
 interface CartItemProps {
-  dishId: number;
-  quantity: number;
+  item: CartItem;
   onUpdateQuantity: (quantity: number) => void;
   isLoading: boolean;
 }
 
-const CartItem = ({ dishId, quantity, onUpdateQuantity, isLoading }: CartItemProps) => {
-  const { data: dish, isLoading: isDishLoading, error } = useQuery({
-    queryKey: ['dish', dishId],
-    queryFn: () => fetchDishById(dishId),
-    staleTime: 5 * 60 * 1000,
-  });
-
-  if (isDishLoading) {
-    return (
-      <div className="flex items-center justify-between rounded-lg border border-gray-200 bg-white p-4">
-        <div className="flex items-center gap-4">
-          <div className="h-16 w-16 animate-pulse rounded-lg bg-gray-200" />
-          <div className="space-y-2">
-            <div className="h-4 w-32 animate-pulse rounded bg-gray-200" />
-            <div className="h-3 w-48 animate-pulse rounded bg-gray-200" />
-            <div className="h-3 w-20 animate-pulse rounded bg-gray-200" />
-          </div>
-        </div>
-        <div className="h-10 w-24 animate-pulse rounded bg-gray-200" />
-      </div>
-    );
-  }
-
-  if (error || !dish) {
-    return (
-      <div className="flex items-center justify-between rounded-lg border border-gray-200 bg-white p-4">
-        <div className="flex items-center gap-4">
-          <div className="flex h-16 w-16 items-center justify-center rounded-lg bg-gray-100">
-            <span className="text-2xl">❌</span>
-          </div>
-          <div>
-            <h4 className="font-medium text-gray-900">
-              Блюдо не найдено
-            </h4>
-            <p className="text-sm text-gray-500">
-              ID: {dishId}
-            </p>
-          </div>
-        </div>
-        
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={() => onUpdateQuantity(0)}
-          disabled={isLoading}
-          className="text-red-500 hover:bg-red-50 hover:text-red-600"
-        >
-          <Trash2 className="h-4 w-4" />
-        </Button>
-      </div>
-    );
-  }
+const CartItem = ({ item, onUpdateQuantity, isLoading }: CartItemProps) => {
+  const { dish, quantity } = item;
 
   return (
     <div className="flex items-center justify-between rounded-lg border border-gray-200 bg-white p-4 transition-shadow hover:shadow-sm">
       <div className="flex items-center gap-4">
         <div className="h-16 w-16 overflow-hidden rounded-lg bg-gray-100">
           {dish.image ? (
-            <img 
-              src={dish.image} 
+            <img
+              src={dish.image}
               alt={dish.name}
               className="h-full w-full object-cover"
             />
@@ -166,7 +152,7 @@ const CartItem = ({ dishId, quantity, onUpdateQuantity, isLoading }: CartItemPro
           </p>
         </div>
       </div>
-      
+
       <div className="flex items-center gap-2">
         <Button
           variant="outline"
@@ -177,11 +163,9 @@ const CartItem = ({ dishId, quantity, onUpdateQuantity, isLoading }: CartItemPro
         >
           <Minus className="h-4 w-4" />
         </Button>
-        
-        <span className="min-w-[20px] text-center font-medium">
-          {quantity}
-        </span>
-        
+
+        <span className="min-w-[20px] text-center font-medium">{quantity}</span>
+
         <Button
           variant="outline"
           size="sm"
@@ -194,4 +178,4 @@ const CartItem = ({ dishId, quantity, onUpdateQuantity, isLoading }: CartItemPro
       </div>
     </div>
   );
-}; 
+};

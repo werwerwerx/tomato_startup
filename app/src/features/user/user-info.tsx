@@ -24,11 +24,11 @@ export const UserInfo = ({
         <div className="flex flex-row items-center gap-4">
           <UserAvatar
             src={user.image}
-            className="h-15 w-15 md:h-18 md:w-18 lg:h-20 lg:w-20"
+            className="h-15 w-15 md:h-18 md:w-18 lg:h-18 lg:w-18"
             alt="user"
           />
           <div className="flex flex-col gap-2">
-            <p className="text-foreground/90 text-bold text-lg md:text-xl lg:text-2xl">
+            <p className="text-foreground/90 text-bold text-md md:text-lg lg:text-xl">
               {user.name}
             </p>
             <p className="text-foreground/70 md:text-md text-sm lg:text-lg">

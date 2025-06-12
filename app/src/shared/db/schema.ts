@@ -65,6 +65,26 @@ export const userCartDishes = pgTable("cart_dishes", {
   quantity: integer("quantity").default(1).notNull(),
 });
 
+export const orders = pgTable("orders", {
+  id: text("id").primaryKey(),
+  userId: text("userId").references(() => users.id, { onDelete: "cascade" }).notNull(),
+  status: text("status").notNull().default("pending"),
+  totalAmount: integer("totalAmount").notNull(),
+  deliveryAddress: text("deliveryAddress").notNull(),
+  createdAt: timestamp("createdAt", { mode: "date" }).defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt", { mode: "date" }).defaultNow().notNull(),
+});
+
+export const orderItems = pgTable("order_items", {
+  id: text("id").primaryKey(),
+  orderId: text("orderId").references(() => orders.id, { onDelete: "cascade" }).notNull(),
+  dishId: integer("dishId").references(() => dishes_table.id, {
+    onDelete: "cascade",
+  }).notNull(),
+  quantity: integer("quantity").notNull(),
+  price: integer("price").notNull(),
+});
+
 export const accounts = pgTable(
   "account",
   {

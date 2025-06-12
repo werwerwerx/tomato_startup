@@ -1,28 +1,20 @@
 "use client";
 
-import { signOut, useSession } from "next-auth/react";
+import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 
 import * as React from "react";
-import { cn } from "@/shared/lib/utils";
-import {
-  BellIcon,
-  ClipboardListIcon,
-} from "lucide-react";
-import { SighOutButton } from "@/features/auth/sigh-out.button";
+import { ClipboardListIcon, SettingsIcon } from "lucide-react";
 import { UserInfo } from "@/features/user/user-info";
 import { getUserProfileNavItems } from "@/features/user/user.profile-nav.constants";
-import {
-  CardNavContainer,
-  CardNavSection,
-} from "@/shared/components/card-nav";
+import { CardNavContainer, CardNavSection } from "@/shared/components/card-nav";
 import {
   Accordion,
   AccordionContent,
   AccordionItem,
   AccordionTrigger,
 } from "@/shared/components/ui-kit/accordion";
-import { UserAdress } from "@/features/user/adress/user-adress";
+import { UserSettings } from "@/features/user/user-settings";
 import { ListFavorites } from "@/features/favorites/list-favorites";
 import { useFavorites } from "@/features/favorites/use-favorites";
 import { ListCart } from "@/features/cart/list-cart";
@@ -33,14 +25,19 @@ export interface IProfileProps {}
 export default function ProfilePage(props: IProfileProps) {
   const session = useSession();
   const router = useRouter();
-  const [notifications, setNotifications] = React.useState(true);
   const { serverFavoritesCount } = useFavorites();
   const { getCartItems } = useCart();
-  
-  const cartItems = getCartItems();
-  const cartItemsCount = cartItems.reduce((sum, item) => sum + item.quantity, 0);
 
-  const profileNavItems = getUserProfileNavItems(serverFavoritesCount, cartItemsCount);
+  const cartItems = getCartItems();
+  const cartItemsCount = cartItems.reduce(
+    (sum, item) => sum + item.quantity,
+    0,
+  );
+
+  const profileNavItems = getUserProfileNavItems(
+    serverFavoritesCount,
+    cartItemsCount,
+  );
   if (session.status === "unauthenticated") {
     router.push("/auth");
   }
@@ -54,10 +51,17 @@ export default function ProfilePage(props: IProfileProps) {
               size="lg"
               user={{
                 name: session.data?.user?.name || "",
-                email: session.data?.user?.email || "",
+                email: session.data?.user?.email || "unkown@unkown.com",
                 image: session.data?.user?.image,
               }}
             />
+            <div className="mt-5 flex flex-col gap-4">
+              <div className="flex items-center gap-2 border-t pt-4 text-lg font-bold">
+                <SettingsIcon className="h-4 w-4" />
+                <span>Настройки</span>
+              </div>
+              <UserSettings />
+            </div>
           </CardNavSection>
 
           <Accordion type="multiple" className="w-full">
@@ -74,46 +78,7 @@ export default function ProfilePage(props: IProfileProps) {
                   </div>
                 </AccordionTrigger>
                 <AccordionContent className="w-full px-5 pb-5">
-                  {item.label === "Настройки" && (
-                    <div className="space-y-4">
-                      <UserAdress />
-                      {/* Уведомления */}
-                      <div className="space-y-2">
-                        <div className="flex items-center gap-2">
-                          <BellIcon className="text-foreground h-4 w-4" />
-                          <h4 className="text-foreground text-base font-semibold">
-                            Уведомления
-                          </h4>
-                        </div>
-                        <div className="flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
-                          <p className="text-foreground/80 text-sm">
-                            Присылать уведомления о заказах
-                          </p>
-                          <button
-                            onClick={() => setNotifications(!notifications)}
-                            className={cn(
-                              "relative inline-flex h-6 w-11 items-center rounded-full transition-colors",
-                              notifications ? "bg-primary" : "bg-foreground/30",
-                            )}
-                          >
-                            <span
-                              className={cn(
-                                "bg-background inline-block h-4 w-4 transform rounded-full transition-transform",
-                                notifications
-                                  ? "translate-x-6"
-                                  : "translate-x-1",
-                              )}
-                            />
-                          </button>
-                        </div>
-                      </div>
-
-                      {/* Выйти из аккаунта */}
-                      <div className="border-foreground/20 border-t pt-3">
-                        <SighOutButton className="bg-foreground text-background hover:bg-foreground/90 flex w-full items-center justify-center gap-2 rounded-lg p-3 text-sm font-medium transition-colors" />
-                      </div>
-                    </div>
-                  )}
+                  {item.label === "Настройки" && <UserSettings />}
                   {item.label.startsWith("Избранное") && <ListFavorites />}
                   {item.label.startsWith("Корзина") && <ListCart />}
                   {item.label === "Ваши заказы" && (

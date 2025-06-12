@@ -1,11 +1,14 @@
-import { HeartIcon, SettingsIcon, ShoppingBagIcon, ClipboardListIcon } from "lucide-react";
+import {
+  HeartIcon,
+  SettingsIcon,
+  ShoppingBagIcon,
+  ClipboardListIcon,
+} from "lucide-react";
 
-export const getUserProfileNavItems = (favoritesCount: number = 0, cartCount: number = 0) => [
-  {
-    icon: <SettingsIcon className="h-4 w-4" />,
-    label: "Настройки",
-    href: "/profile/#settings",
-  },
+export const getUserProfileNavItems = (
+  favoritesCount: number = 0,
+  cartCount: number = 0,
+) => [
   {
     icon: <HeartIcon className="h-4 w-4" />,
     label: `Избранное${favoritesCount > 0 ? ` (${favoritesCount})` : ""}`,

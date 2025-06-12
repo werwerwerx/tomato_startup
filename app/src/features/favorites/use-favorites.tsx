@@ -55,7 +55,24 @@ export const useFavorites = () => {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ dishId }),
       }),
-    onSuccess: () => {
+    onMutate: async ({ dishId }) => {
+      await queryClient.cancelQueries({ queryKey: FAVORITES_QUERY_KEY });
+      
+      const previousFavorites = queryClient.getQueryData(FAVORITES_QUERY_KEY) as Record<number, boolean> || {};
+      const newFavorites = { ...previousFavorites, [dishId]: true };
+      
+      saveFavoritesLocal(newFavorites);
+      queryClient.setQueryData(FAVORITES_QUERY_KEY, newFavorites);
+      
+      return { previousFavorites };
+    },
+    onError: (err, { dishId }, context) => {
+      if (context?.previousFavorites) {
+        saveFavoritesLocal(context.previousFavorites);
+        queryClient.setQueryData(FAVORITES_QUERY_KEY, context.previousFavorites);
+      }
+    },
+    onSettled: () => {
       refetchServerFavorites();
     },
   });
@@ -67,7 +84,25 @@ export const useFavorites = () => {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ dishId }),
       }),
-    onSuccess: () => {
+    onMutate: async ({ dishId }) => {
+      await queryClient.cancelQueries({ queryKey: FAVORITES_QUERY_KEY });
+      
+      const previousFavorites = queryClient.getQueryData(FAVORITES_QUERY_KEY) as Record<number, boolean> || {};
+      const newFavorites = { ...previousFavorites };
+      delete newFavorites[dishId];
+      
+      saveFavoritesLocal(newFavorites);
+      queryClient.setQueryData(FAVORITES_QUERY_KEY, newFavorites);
+      
+      return { previousFavorites };
+    },
+    onError: (err, { dishId }, context) => {
+      if (context?.previousFavorites) {
+        saveFavoritesLocal(context.previousFavorites);
+        queryClient.setQueryData(FAVORITES_QUERY_KEY, context.previousFavorites);
+      }
+    },
+    onSettled: () => {
       refetchServerFavorites();
     },
   });
@@ -84,7 +119,33 @@ export const useFavorites = () => {
     },
   });
 
-  // Автоматическая синхронизация при монтировании
+  const clearMutation = useMutation({
+    mutationFn: () =>
+      fetch("/api/user/favorites/clear", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+      }),
+    onMutate: async () => {
+      await queryClient.cancelQueries({ queryKey: FAVORITES_QUERY_KEY });
+      
+      const previousFavorites = queryClient.getQueryData(FAVORITES_QUERY_KEY) as Record<number, boolean> || {};
+      
+      clearFavoritesLocal();
+      queryClient.setQueryData(FAVORITES_QUERY_KEY, {});
+      
+      return { previousFavorites };
+    },
+    onError: (err, variables, context) => {
+      if (context?.previousFavorites) {
+        saveFavoritesLocal(context.previousFavorites);
+        queryClient.setQueryData(FAVORITES_QUERY_KEY, context.previousFavorites);
+      }
+    },
+    onSettled: () => {
+      refetchServerFavorites();
+    },
+  });
+
   useEffect(() => {
     const localItems = Object.keys(favorites).map((dishId) => ({
       dishId: Number(dishId),
@@ -95,22 +156,16 @@ export const useFavorites = () => {
     } else {
       refetchServerFavorites();
     }
-  }, []); // Только при монтировании
+  }, []);
 
   const toggleFavorite = (dishId: number) => {
     const isFavorite = favorites[dishId] || false;
-    const newFavorites = { ...favorites };
 
     if (isFavorite) {
-      delete newFavorites[dishId];
       removeMutation.mutate({ dishId });
     } else {
-      newFavorites[dishId] = true;
       addMutation.mutate({ dishId });
     }
-
-    saveFavoritesLocal(newFavorites);
-    queryClient.setQueryData(FAVORITES_QUERY_KEY, newFavorites);
   };
 
   const syncFavorites = () => {
@@ -121,13 +176,10 @@ export const useFavorites = () => {
   };
 
   const clearFavorites = () => {
-    clearFavoritesLocal();
-    queryClient.setQueryData(FAVORITES_QUERY_KEY, {});
-    refetchServerFavorites();
+    clearMutation.mutate();
   };
 
   return {
-    // Локальные методы
     isFavorite: (dishId: number) => favorites[dishId] || false,
     toggleFavorite,
     getFavoriteItems: () =>
@@ -135,19 +187,17 @@ export const useFavorites = () => {
         dishId: Number(dishId),
       })),
 
-    // Серверные данные
     serverFavorites: serverFavorites?.favorites || [],
     serverFavoritesCount: serverFavorites?.count || 0,
 
-    // Методы синхронизации
     syncFavorites,
     clearFavorites,
     refetchServerFavorites,
 
-    // Состояния загрузки
     isLoading:
       addMutation.isPending ||
       removeMutation.isPending ||
-      syncMutation.isPending,
+      syncMutation.isPending ||
+      clearMutation.isPending,
   };
 };

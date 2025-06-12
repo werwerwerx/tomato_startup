@@ -5,6 +5,14 @@ import { users } from "@/shared/db/schema";
 import { eq } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 
+// hold it with consistency
+export type AdressResponseDTO = {
+  adress?: string | null;
+  message?: string;
+  shouldRefreshSession: string;
+  error?: string;
+};
+
 export async function GET() {
   try {
     const session = await auth();
