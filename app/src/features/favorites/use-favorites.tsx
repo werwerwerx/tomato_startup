@@ -1,203 +1,142 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { useEffect } from "react";
+import { useCallback } from "react";
+import { favoritesApi } from "./api";
 
-const FAVORITES_KEY = "FAVORITES";
 const FAVORITES_QUERY_KEY = ["favorites"];
-const SERVER_FAVORITES_QUERY_KEY = ["server-favorites"];
-
-const getFavoritesLocal = () =>
-  JSON.parse(localStorage.getItem(FAVORITES_KEY) || "{}");
-const saveFavoritesLocal = (favorites: Record<number, boolean>) =>
-  localStorage.setItem(FAVORITES_KEY, JSON.stringify(favorites));
-const clearFavoritesLocal = () => localStorage.removeItem(FAVORITES_KEY);
-
-interface ServerFavorite {
-  dishId: number;
-  dish: {
-    id: number;
-    name: string;
-    description: string;
-    price: number;
-    image: string;
-  };
-}
-
-const fetchServerFavorites = async (): Promise<{
-  favorites: ServerFavorite[];
-  count: number;
-}> => {
-  const response = await fetch("/api/user/favorites/get");
-  if (!response.ok) {
-    throw new Error("Failed to fetch server favorites");
-  }
-  return response.json();
-};
 
 export const useFavorites = () => {
   const queryClient = useQueryClient();
 
-  const { data: favorites = {} } = useQuery({
+  const { data: favoritesData, isLoading: isLoadingFavorites } = useQuery({
     queryKey: FAVORITES_QUERY_KEY,
-    queryFn: getFavoritesLocal,
-    staleTime: Infinity,
-  });
-
-  const { data: serverFavorites, refetch: refetchServerFavorites } = useQuery({
-    queryKey: SERVER_FAVORITES_QUERY_KEY,
-    queryFn: fetchServerFavorites,
+    queryFn: favoritesApi.getFavorites,
     staleTime: 5 * 60 * 1000,
   });
 
   const addMutation = useMutation({
-    mutationFn: ({ dishId }: { dishId: number }) =>
-      fetch("/api/user/favorites/add", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ dishId }),
-      }),
-    onMutate: async ({ dishId }) => {
+    mutationFn: favoritesApi.addFavorite,
+    onMutate: async (dishId) => {
       await queryClient.cancelQueries({ queryKey: FAVORITES_QUERY_KEY });
       
-      const previousFavorites = queryClient.getQueryData(FAVORITES_QUERY_KEY) as Record<number, boolean> || {};
-      const newFavorites = { ...previousFavorites, [dishId]: true };
+      const previousFavorites = queryClient.getQueryData(FAVORITES_QUERY_KEY);
       
-      saveFavoritesLocal(newFavorites);
-      queryClient.setQueryData(FAVORITES_QUERY_KEY, newFavorites);
-      
-      return { previousFavorites };
-    },
-    onError: (err, { dishId }, context) => {
-      if (context?.previousFavorites) {
-        saveFavoritesLocal(context.previousFavorites);
-        queryClient.setQueryData(FAVORITES_QUERY_KEY, context.previousFavorites);
-      }
-    },
-    onSettled: () => {
-      refetchServerFavorites();
-    },
-  });
-
-  const removeMutation = useMutation({
-    mutationFn: ({ dishId }: { dishId: number }) =>
-      fetch("/api/user/favorites/remove", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ dishId }),
-      }),
-    onMutate: async ({ dishId }) => {
-      await queryClient.cancelQueries({ queryKey: FAVORITES_QUERY_KEY });
-      
-      const previousFavorites = queryClient.getQueryData(FAVORITES_QUERY_KEY) as Record<number, boolean> || {};
-      const newFavorites = { ...previousFavorites };
-      delete newFavorites[dishId];
-      
-      saveFavoritesLocal(newFavorites);
-      queryClient.setQueryData(FAVORITES_QUERY_KEY, newFavorites);
-      
-      return { previousFavorites };
-    },
-    onError: (err, { dishId }, context) => {
-      if (context?.previousFavorites) {
-        saveFavoritesLocal(context.previousFavorites);
-        queryClient.setQueryData(FAVORITES_QUERY_KEY, context.previousFavorites);
-      }
-    },
-    onSettled: () => {
-      refetchServerFavorites();
-    },
-  });
-
-  const syncMutation = useMutation({
-    mutationFn: (items: Array<{ dishId: number }>) =>
-      fetch("/api/user/favorites/sync", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ items }),
-      }),
-    onSuccess: () => {
-      refetchServerFavorites();
-    },
-  });
-
-  const clearMutation = useMutation({
-    mutationFn: () =>
-      fetch("/api/user/favorites/clear", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-      }),
-    onMutate: async () => {
-      await queryClient.cancelQueries({ queryKey: FAVORITES_QUERY_KEY });
-      
-      const previousFavorites = queryClient.getQueryData(FAVORITES_QUERY_KEY) as Record<number, boolean> || {};
-      
-      clearFavoritesLocal();
-      queryClient.setQueryData(FAVORITES_QUERY_KEY, {});
+      queryClient.setQueryData(FAVORITES_QUERY_KEY, (old: any) => {
+        if (!old) return old;
+        
+        const isAlreadyFavorite = old.favorites.some((fav: any) => fav.dishId === dishId);
+        if (isAlreadyFavorite) return old;
+        
+        return {
+          ...old,
+          favorites: [
+            ...old.favorites,
+            { dishId, dish: null }
+          ],
+          count: old.count + 1,
+        };
+      });
       
       return { previousFavorites };
     },
     onError: (err, variables, context) => {
       if (context?.previousFavorites) {
-        saveFavoritesLocal(context.previousFavorites);
         queryClient.setQueryData(FAVORITES_QUERY_KEY, context.previousFavorites);
       }
     },
     onSettled: () => {
-      refetchServerFavorites();
+      queryClient.invalidateQueries({ queryKey: FAVORITES_QUERY_KEY });
     },
   });
 
-  useEffect(() => {
-    const localItems = Object.keys(favorites).map((dishId) => ({
-      dishId: Number(dishId),
-    }));
+  const removeMutation = useMutation({
+    mutationFn: favoritesApi.removeFavorite,
+    onMutate: async (dishId) => {
+      await queryClient.cancelQueries({ queryKey: FAVORITES_QUERY_KEY });
+      
+      const previousFavorites = queryClient.getQueryData(FAVORITES_QUERY_KEY);
+      
+      queryClient.setQueryData(FAVORITES_QUERY_KEY, (old: any) => {
+        if (!old) return old;
+        
+        const newFavorites = old.favorites.filter((fav: any) => fav.dishId !== dishId);
+        
+        return {
+          ...old,
+          favorites: newFavorites,
+          count: newFavorites.length,
+        };
+      });
+      
+      return { previousFavorites };
+    },
+    onError: (err, variables, context) => {
+      if (context?.previousFavorites) {
+        queryClient.setQueryData(FAVORITES_QUERY_KEY, context.previousFavorites);
+      }
+    },
+    onSettled: () => {
+      queryClient.invalidateQueries({ queryKey: FAVORITES_QUERY_KEY });
+    },
+  });
 
-    if (localItems.length > 0) {
-      syncMutation.mutate(localItems);
-    } else {
-      refetchServerFavorites();
-    }
-  }, []);
+  const clearMutation = useMutation({
+    mutationFn: favoritesApi.clearFavorites,
+    onMutate: async () => {
+      await queryClient.cancelQueries({ queryKey: FAVORITES_QUERY_KEY });
+      
+      const previousFavorites = queryClient.getQueryData(FAVORITES_QUERY_KEY);
+      
+      queryClient.setQueryData(FAVORITES_QUERY_KEY, (old: any) => {
+        if (!old) return old;
+        return {
+          ...old,
+          favorites: [],
+          count: 0,
+        };
+      });
+      
+      return { previousFavorites };
+    },
+    onError: (err, variables, context) => {
+      if (context?.previousFavorites) {
+        queryClient.setQueryData(FAVORITES_QUERY_KEY, context.previousFavorites);
+      }
+    },
+    onSettled: () => {
+      queryClient.invalidateQueries({ queryKey: FAVORITES_QUERY_KEY });
+    },
+  });
 
-  const toggleFavorite = (dishId: number) => {
-    const isFavorite = favorites[dishId] || false;
+  const toggleFavorite = useCallback(
+    (dishId: number) => {
+      const isFavorite = favoritesData?.favorites.some((fav) => fav.dishId === dishId) || false;
 
-    if (isFavorite) {
-      removeMutation.mutate({ dishId });
-    } else {
-      addMutation.mutate({ dishId });
-    }
-  };
+      if (isFavorite) {
+        removeMutation.mutate(dishId);
+      } else {
+        addMutation.mutate(dishId);
+      }
+    },
+    [favoritesData, addMutation, removeMutation],
+  );
 
-  const syncFavorites = () => {
-    const items = Object.keys(favorites).map((dishId) => ({
-      dishId: Number(dishId),
-    }));
-    syncMutation.mutate(items);
-  };
-
-  const clearFavorites = () => {
+  const clearFavorites = useCallback(() => {
     clearMutation.mutate();
-  };
+  }, [clearMutation]);
+
+  const isFavorite = useCallback(
+    (dishId: number) => {
+      return favoritesData?.favorites.some((fav) => fav.dishId === dishId) || false;
+    },
+    [favoritesData],
+  );
 
   return {
-    isFavorite: (dishId: number) => favorites[dishId] || false,
+    serverFavorites: favoritesData?.favorites || [],
+    serverFavoritesCount: favoritesData?.count || 0,
+    isFavorite,
     toggleFavorite,
-    getFavoriteItems: () =>
-      Object.keys(favorites).map((dishId) => ({
-        dishId: Number(dishId),
-      })),
-
-    serverFavorites: serverFavorites?.favorites || [],
-    serverFavoritesCount: serverFavorites?.count || 0,
-
-    syncFavorites,
     clearFavorites,
-    refetchServerFavorites,
-
-    isLoading:
-      addMutation.isPending ||
-      removeMutation.isPending ||
-      syncMutation.isPending ||
-      clearMutation.isPending,
+    isLoading: isLoadingFavorites || addMutation.isPending || removeMutation.isPending || clearMutation.isPending,
   };
 };

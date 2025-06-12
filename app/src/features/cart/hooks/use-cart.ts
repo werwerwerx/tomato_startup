@@ -1,125 +1,121 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { useCallback, useRef, useEffect } from "react";
-import { syncCart, clearCart as clearCartAPI } from "../api";
+import { useCallback } from "react";
+import { cartApi } from "../api";
 
-const CART_KEY = "CART";
 const CART_QUERY_KEY = ["cart"];
-const CART_DISHES_QUERY_KEY = ["cart-dishes"];
-const SYNC_DELAY_MS = 1000;
-
-const getCartLocal = () => JSON.parse(localStorage.getItem(CART_KEY) || "{}");
-const saveCartLocal = (cart: Record<number, number>) =>
-  localStorage.setItem(CART_KEY, JSON.stringify(cart));
-const clearCartLocal = () => localStorage.removeItem(CART_KEY);
 
 export const useCart = () => {
   const queryClient = useQueryClient();
-  const syncTimeoutRef = useRef<NodeJS.Timeout | null>(null);
-  const pendingSyncRef = useRef(false);
 
-  const { data: cart = {} } = useQuery({
+  const { data: cartData, isLoading: isLoadingCart } = useQuery({
     queryKey: CART_QUERY_KEY,
-    queryFn: getCartLocal,
-    staleTime: Infinity,
+    queryFn: cartApi.getCart,
+    staleTime: 2 * 60 * 1000,
   });
 
-  const syncMutation = useMutation({
-    mutationFn: syncCart,
-    onMutate: () => {
-      pendingSyncRef.current = true;
+  const updateMutation = useMutation({
+    mutationFn: cartApi.updateCartItem,
+    onMutate: async ({ dishId, quantity }) => {
+      await queryClient.cancelQueries({ queryKey: CART_QUERY_KEY });
+      
+      const previousCart = queryClient.getQueryData(CART_QUERY_KEY);
+      
+      queryClient.setQueryData(CART_QUERY_KEY, (old: any) => {
+        if (!old) return old;
+        
+        const existingItemIndex = old.cartItems.findIndex((item: any) => item.dishId === dishId);
+        const newCartItems = [...old.cartItems];
+        
+        if (quantity === 0) {
+          if (existingItemIndex >= 0) {
+            newCartItems.splice(existingItemIndex, 1);
+          }
+        } else {
+          if (existingItemIndex >= 0) {
+            newCartItems[existingItemIndex] = {
+              ...newCartItems[existingItemIndex],
+              quantity,
+            };
+          }
+        }
+        
+        return {
+          ...old,
+          cartItems: newCartItems,
+          count: newCartItems.length,
+        };
+      });
+      
+      return { previousCart };
+    },
+    onError: (err, variables, context) => {
+      if (context?.previousCart) {
+        queryClient.setQueryData(CART_QUERY_KEY, context.previousCart);
+      }
     },
     onSettled: () => {
-      pendingSyncRef.current = false;
-      queryClient.invalidateQueries({ queryKey: CART_DISHES_QUERY_KEY });
+      queryClient.invalidateQueries({ queryKey: CART_QUERY_KEY });
     },
   });
 
   const clearMutation = useMutation({
-    mutationFn: clearCartAPI,
-    onSuccess: () => {
-      clearCartLocal();
-      queryClient.setQueryData(CART_QUERY_KEY, {});
-      queryClient.invalidateQueries({ queryKey: CART_DISHES_QUERY_KEY });
-      if (syncTimeoutRef.current) {
-        clearTimeout(syncTimeoutRef.current);
-        syncTimeoutRef.current = null;
+    mutationFn: cartApi.clearCart,
+    onMutate: async () => {
+      await queryClient.cancelQueries({ queryKey: CART_QUERY_KEY });
+      
+      const previousCart = queryClient.getQueryData(CART_QUERY_KEY);
+      
+      queryClient.setQueryData(CART_QUERY_KEY, (old: any) => {
+        if (!old) return old;
+        return {
+          ...old,
+          cartItems: [],
+          count: 0,
+        };
+      });
+      
+      return { previousCart };
+    },
+    onError: (err, variables, context) => {
+      if (context?.previousCart) {
+        queryClient.setQueryData(CART_QUERY_KEY, context.previousCart);
       }
+    },
+    onSettled: () => {
+      queryClient.invalidateQueries({ queryKey: CART_QUERY_KEY });
     },
   });
 
-  const debouncedSync = useCallback(() => {
-    if (syncTimeoutRef.current) {
-      clearTimeout(syncTimeoutRef.current);
-    }
-
-    syncTimeoutRef.current = setTimeout(() => {
-      const items = Object.entries(cart)
-        .map(([dishId, quantity]) => ({
-          dishId: Number(dishId),
-          quantity: quantity as number,
-        }))
-        .filter((item) => item.quantity > 0);
-
-      if (items.length > 0 && !pendingSyncRef.current) {
-        syncMutation.mutate(items);
-      }
-    }, SYNC_DELAY_MS);
-  }, [cart, syncMutation]);
-
-  useEffect(() => {
-    return () => {
-      if (syncTimeoutRef.current) {
-        clearTimeout(syncTimeoutRef.current);
-      }
-    };
-  }, []);
-
   const updateQuantity = useCallback(
     (dishId: number, quantity: number) => {
-      const newCart = { ...cart, [dishId]: quantity };
-      if (quantity === 0) delete newCart[dishId];
-
-      saveCartLocal(newCart);
-      queryClient.setQueryData(CART_QUERY_KEY, newCart);
-
-      debouncedSync();
+      updateMutation.mutate({ dishId, quantity });
     },
-    [cart, queryClient, debouncedSync],
+    [updateMutation],
   );
-
-  const forceSyncNow = useCallback(() => {
-    if (syncTimeoutRef.current) {
-      clearTimeout(syncTimeoutRef.current);
-      syncTimeoutRef.current = null;
-    }
-
-    const items = Object.entries(cart)
-      .map(([dishId, quantity]) => ({
-        dishId: Number(dishId),
-        quantity: quantity as number,
-      }))
-      .filter((item) => item.quantity > 0);
-
-    if (items.length > 0) {
-      syncMutation.mutate(items);
-    }
-  }, [cart, syncMutation]);
 
   const clearCart = useCallback(() => {
     clearMutation.mutate();
   }, [clearMutation]);
 
+  const getItemQuantity = useCallback(
+    (dishId: number) => {
+      const item = cartData?.cartItems.find((item) => item.dishId === dishId);
+      return item?.quantity || 0;
+    },
+    [cartData],
+  );
+
+  const getCartItems = useCallback(() => {
+    return cartData?.cartItems || [];
+  }, [cartData]);
+
   return {
-    getItemQuantity: (dishId: number) => cart[dishId] || 0,
+    cartItems: cartData?.cartItems || [],
+    totalItems: cartData?.cartItems.reduce((sum, item) => sum + item.quantity, 0) || 0,
+    getItemQuantity,
     updateQuantity,
-    getCartItems: () =>
-      Object.entries(cart).map(([dishId, quantity]) => ({
-        dishId: Number(dishId),
-        quantity: quantity as number,
-      })),
-    forceSyncNow,
+    getCartItems,
     clearCart,
-    isLoading: syncMutation.isPending || clearMutation.isPending,
-    hasPendingSync: !!syncTimeoutRef.current,
+    isLoading: isLoadingCart || updateMutation.isPending || clearMutation.isPending,
   };
 };

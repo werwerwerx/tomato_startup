@@ -52,7 +52,7 @@ export const UserProfileButton = () => {
                 }}
               />
             </CardNavSection>
-            {USER_PROFILE_NAV_ITEMS.map((item) => (
+            {USER_PROFILE_NAV_ITEMS.filter((item) => !item.label.startsWith("Корзина")).map((item) => (
               <CardNavRow
                 href={item.href}
                 className="items-center gap-2"

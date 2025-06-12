@@ -66,10 +66,9 @@ export async function POST(request: NextRequest) {
         }
       } else {
         if (existingItem) {
-          const newQuantity = Math.max(existingItem.quantity, quantity);
           await db
             .update(userCartDishes)
-            .set({ quantity: newQuantity })
+            .set({ quantity })
             .where(eq(userCartDishes.id, existingItem.id));
         } else {
           await db.insert(userCartDishes).values({

@@ -19,6 +19,7 @@ import { ListFavorites } from "@/features/favorites/list-favorites";
 import { useFavorites } from "@/features/favorites/use-favorites";
 import { ListCart } from "@/features/cart/list-cart";
 import { useCart } from "@/features/cart/hooks/use-cart";
+import { ListOrders } from "@/features/orders/list-orders";
 
 export interface IProfileProps {}
 
@@ -81,17 +82,7 @@ export default function ProfilePage(props: IProfileProps) {
                   {item.label === "Настройки" && <UserSettings />}
                   {item.label.startsWith("Избранное") && <ListFavorites />}
                   {item.label.startsWith("Корзина") && <ListCart />}
-                  {item.label === "Ваши заказы" && (
-                    <div className="flex flex-col items-center justify-center py-12 text-center">
-                      <ClipboardListIcon className="mb-4 h-16 w-16 text-gray-300" />
-                      <h3 className="mb-2 text-lg font-semibold text-gray-600">
-                        Вы пока не делали заказы
-                      </h3>
-                      <p className="max-w-sm text-sm text-gray-500">
-                        Добавьте блюда в корзину и оформите ваш первый заказ
-                      </p>
-                    </div>
-                  )}
+                  {item.label === "Ваши заказы" && <ListOrders />}
                 </AccordionContent>
               </AccordionItem>
             ))}

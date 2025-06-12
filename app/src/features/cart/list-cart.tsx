@@ -1,7 +1,6 @@
 import { useCart } from "./hooks/use-cart";
 import { ShoppingBag, Trash2, Plus, Minus } from "lucide-react";
 import { Button } from "@/shared/components/ui-kit/button";
-import { useQuery } from "@tanstack/react-query";
 
 interface Dish {
   id: number;
@@ -17,31 +16,10 @@ interface CartItem {
   dish: Dish;
 }
 
-const fetchCartDishes = async (): Promise<CartItem[]> => {
-  const response = await fetch("/api/user/cart/dishes");
-  if (!response.ok) {
-    throw new Error("Failed to fetch cart dishes");
-  }
-  const data = await response.json();
-  return data.cartItems || [];
-};
-
 export const ListCart = () => {
-  const { getCartItems, updateQuantity, clearCart, isLoading } = useCart();
-  
-  const {
-    data: serverCartItems = [],
-    isLoading: isLoadingDishes,
-    error,
-  } = useQuery({
-    queryKey: ["cart-dishes"],
-    queryFn: fetchCartDishes,
-    staleTime: 2 * 60 * 1000,
-  });
+  const { cartItems, totalItems, updateQuantity, clearCart, isLoading } = useCart();
 
-  const localCartItems = getCartItems();
-
-  if (isLoadingDishes) {
+  if (isLoading) {
     return (
       <div className="flex flex-col items-center justify-center py-12 text-center">
         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900"></div>
@@ -50,7 +28,7 @@ export const ListCart = () => {
     );
   }
 
-  if (error || (!isLoadingDishes && serverCartItems.length === 0 && localCartItems.length === 0)) {
+  if (cartItems.length === 0) {
     return (
       <div className="flex flex-col items-center justify-center py-12 text-center">
         <ShoppingBag className="mb-4 h-16 w-16 text-gray-300" />
@@ -63,25 +41,6 @@ export const ListCart = () => {
       </div>
     );
   }
-
-  const combinedItems = new Map<number, CartItem>();
-  
-  serverCartItems.forEach(item => {
-    combinedItems.set(item.dishId, item);
-  });
-
-  localCartItems.forEach(localItem => {
-    const existing = combinedItems.get(localItem.dishId);
-    if (existing) {
-      combinedItems.set(localItem.dishId, {
-        ...existing,
-        quantity: Math.max(existing.quantity, localItem.quantity),
-      });
-    }
-  });
-
-  const cartItems = Array.from(combinedItems.values());
-  const totalItems = cartItems.reduce((sum, item) => sum + item.quantity, 0);
 
   return (
     <div className="space-y-4">

@@ -1,33 +1,56 @@
-export const addToCart = async ({
-  dishId,
-  quantity,
-}: {
+interface CartItem {
   dishId: number;
   quantity: number;
-}) => {
-  const response = await fetch("/api/user/cart/add", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ dishId, quantity }),
-  });
-  return response.json();
-};
+  dish: {
+    id: number;
+    name: string;
+    description: string;
+    price: number;
+    image: string;
+  };
+}
 
-export const syncCart = async (
-  items: Array<{ dishId: number; quantity: number }>,
-) => {
-  const response = await fetch("/api/user/cart/sync", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ items }),
-  });
-  return response.json();
-};
+interface CartResponse {
+  success: boolean;
+  cartItems: CartItem[];
+  count: number;
+}
 
-export const clearCart = async () => {
-  const response = await fetch("/api/user/cart/clear", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-  });
-  return response.json();
+export const cartApi = {
+  getCart: async (): Promise<CartResponse> => {
+    const response = await fetch("/api/user/cart/dishes");
+    if (!response.ok) {
+      throw new Error("Failed to fetch cart");
+    }
+    return response.json();
+  },
+
+  updateCartItem: async ({
+    dishId,
+    quantity,
+  }: {
+    dishId: number;
+    quantity: number;
+  }) => {
+    const response = await fetch("/api/user/cart/add", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ dishId, quantity }),
+    });
+    if (!response.ok) {
+      throw new Error("Failed to update cart item");
+    }
+    return response.json();
+  },
+
+  clearCart: async () => {
+    const response = await fetch("/api/user/cart/clear", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+    });
+    if (!response.ok) {
+      throw new Error("Failed to clear cart");
+    }
+    return response.json();
+  },
 };

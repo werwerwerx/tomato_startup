@@ -11,6 +11,15 @@ export const ListFavorites = () => {
     isLoading,
   } = useFavorites();
 
+  if (isLoading) {
+    return (
+      <div className="flex flex-col items-center justify-center py-12 text-center">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900"></div>
+        <p className="mt-2 text-sm text-gray-500">Загрузка избранного...</p>
+      </div>
+    );
+  }
+
   if (!serverFavoritesCount) {
     return (
       <div className="flex flex-col items-center justify-center py-12 text-center">
@@ -28,6 +37,7 @@ export const ListFavorites = () => {
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
+        <h3 className="text-lg font-semibold">Избранное ({serverFavoritesCount})</h3>
         {serverFavoritesCount > 0 && (
           <Button
             variant="outline"

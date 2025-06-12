@@ -2,7 +2,7 @@
 import { cn } from "@/shared/lib/utils";
 import { assets } from "@assets";
 import { Button } from "@/shared/components/ui-kit/button";
-import { ShoppingCartIcon, UserIcon } from "lucide-react";
+import { UserIcon } from "lucide-react";
 import Link from "next/link";
 import { SearchFeature as Search } from "@/features/search";
 import { HTMLAttributes } from "react";
@@ -12,6 +12,7 @@ import {
   NavIcon,
 } from "@/shared/components/header-navs";
 import { UserProfileButton } from "@/features/auth/profile.button";
+import { CartButton } from "@/features/cart/cart.button";
 
 export const foregroundStyles = "bg-background/95 backdrop-blur-3xl";
 
@@ -36,6 +37,8 @@ export const Header = () => {
             <Link href="/auth">
               <UserProfileButton />
             </Link>
+            
+            <CartButton/>
           </HeaderSection>
         </HeaderContent>
       </HeaderContainer>
