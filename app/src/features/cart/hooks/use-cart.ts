@@ -1,16 +1,41 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useCallback } from "react";
+import { useSession } from "next-auth/react";
 import { cartApi } from "../api";
+import { useMemoryCart } from "@/shared/hooks/use-memory-storage";
+import { useSyncData } from "@/shared/hooks/use-sync-data";
 
 const CART_QUERY_KEY = ["cart"];
 
 export const useCart = () => {
   const queryClient = useQueryClient();
+  const { data: session, status } = useSession();
+  const memoryCart = useMemoryCart();
 
   const { data: cartData, isLoading: isLoadingCart } = useQuery({
     queryKey: CART_QUERY_KEY,
     queryFn: cartApi.getCart,
     staleTime: 2 * 60 * 1000,
+    enabled: status === "authenticated",
+  });
+
+  useSyncData({
+    queryKey: CART_QUERY_KEY,
+    syncEndpoint: "/api/user/cart/sync",
+    getCacheData: () => memoryCart.getCartForSync(),
+    onSync: (success) => {
+      if (success) {
+        memoryCart.clearCart();
+        queryClient.invalidateQueries({ queryKey: CART_QUERY_KEY });
+      }
+    },
+    onLogout: () => {
+      if (cartData?.cartItems) {
+        cartData.cartItems.forEach(item => {
+          memoryCart.addToCart(item.dishId, item.quantity);
+        });
+      }
+    },
   });
 
   const updateMutation = useMutation({
@@ -88,30 +113,54 @@ export const useCart = () => {
 
   const updateQuantity = useCallback(
     (dishId: number, quantity: number) => {
-      updateMutation.mutate({ dishId, quantity });
+      if (status === "authenticated") {
+        updateMutation.mutate({ dishId, quantity });
+      } else {
+        memoryCart.addToCart(dishId, quantity);
+      }
     },
-    [updateMutation],
+    [updateMutation, status, memoryCart],
   );
 
   const clearCart = useCallback(() => {
-    clearMutation.mutate();
-  }, [clearMutation]);
+    if (status === "authenticated") {
+      clearMutation.mutate();
+    } else {
+      memoryCart.clearCart();
+    }
+  }, [clearMutation, status, memoryCart]);
 
   const getItemQuantity = useCallback(
     (dishId: number) => {
-      const item = cartData?.cartItems.find((item) => item.dishId === dishId);
-      return item?.quantity || 0;
+      if (status === "authenticated") {
+        const item = cartData?.cartItems.find((item) => item.dishId === dishId);
+        return item?.quantity || 0;
+      } else {
+        return memoryCart.getQuantity(dishId);
+      }
     },
-    [cartData],
+    [cartData, status, memoryCart],
   );
 
   const getCartItems = useCallback(() => {
-    return cartData?.cartItems || [];
-  }, [cartData]);
+    if (status === "authenticated") {
+      return cartData?.cartItems || [];
+    } else {
+      return memoryCart.cart.map(item => ({
+        dishId: item.dishId,
+        quantity: item.quantity,
+        dish: null,
+      }));
+    }
+  }, [cartData, status, memoryCart]);
+
+  const totalItems = status === "authenticated" 
+    ? cartData?.cartItems.reduce((sum, item) => sum + item.quantity, 0) || 0
+    : memoryCart.totalItems;
 
   return {
-    cartItems: cartData?.cartItems || [],
-    totalItems: cartData?.cartItems.reduce((sum, item) => sum + item.quantity, 0) || 0,
+    cartItems: getCartItems(),
+    totalItems,
     getItemQuantity,
     updateQuantity,
     getCartItems,
