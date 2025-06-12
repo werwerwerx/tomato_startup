@@ -1,7 +1,10 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useCallback, useRef, useEffect } from "react";
+import { syncCart } from "../api";
 
 const CART_KEY = "CART";
 const CART_QUERY_KEY = ["cart"];
+const SYNC_DELAY_MS = 1000;
 
 const getCartLocal = () => JSON.parse(localStorage.getItem(CART_KEY) || "{}");
 const saveCartLocal = (cart: Record<number, number>) =>
@@ -10,6 +13,8 @@ const clearCartLocal = () => localStorage.removeItem(CART_KEY);
 
 export const useCart = () => {
   const queryClient = useQueryClient();
+  const syncTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const pendingSyncRef = useRef(false);
 
   const { data: cart = {} } = useQuery({
     queryKey: CART_QUERY_KEY,
@@ -17,45 +22,78 @@ export const useCart = () => {
     staleTime: Infinity,
   });
 
-  const updateMutation = useMutation({
-    mutationFn: ({ dishId, quantity }: { dishId: number; quantity: number }) =>
-      fetch("/api/user/cart/add", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ dishId, quantity }),
-      }),
-  });
-
   const syncMutation = useMutation({
-    mutationFn: (items: Array<{ dishId: number; quantity: number }>) =>
-      fetch("/api/user/cart/sync", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ items }),
-      }),
+    mutationFn: syncCart,
+    onMutate: () => {
+      pendingSyncRef.current = true;
+    },
+    onSettled: () => {
+      pendingSyncRef.current = false;
+    },
   });
 
-  const updateQuantity = (dishId: number, quantity: number) => {
+  const debouncedSync = useCallback(() => {
+    if (syncTimeoutRef.current) {
+      clearTimeout(syncTimeoutRef.current);
+    }
+    
+    syncTimeoutRef.current = setTimeout(() => {
+      const items = Object.entries(cart)
+        .map(([dishId, quantity]) => ({
+          dishId: Number(dishId),
+          quantity: quantity as number,
+        }))
+        .filter(item => item.quantity > 0);
+
+      if (items.length > 0 && !pendingSyncRef.current) {
+        syncMutation.mutate(items);
+      }
+    }, SYNC_DELAY_MS);
+  }, [cart, syncMutation]);
+
+  useEffect(() => {
+    return () => {
+      if (syncTimeoutRef.current) {
+        clearTimeout(syncTimeoutRef.current);
+      }
+    };
+  }, []);
+
+  const updateQuantity = useCallback((dishId: number, quantity: number) => {
     const newCart = { ...cart, [dishId]: quantity };
     if (quantity === 0) delete newCart[dishId];
 
     saveCartLocal(newCart);
     queryClient.setQueryData(CART_QUERY_KEY, newCart);
-    updateMutation.mutate({ dishId, quantity });
-  };
+    
+    debouncedSync();
+  }, [cart, queryClient, debouncedSync]);
 
-  const syncCart = () => {
-    const items = Object.entries(cart).map(([dishId, quantity]) => ({
-      dishId: Number(dishId),
-      quantity: quantity as number,
-    }));
-    syncMutation.mutate(items);
-  };
+  const forceSyncNow = useCallback(() => {
+    if (syncTimeoutRef.current) {
+      clearTimeout(syncTimeoutRef.current);
+      syncTimeoutRef.current = null;
+    }
 
-  const clearCart = () => {
+    const items = Object.entries(cart)
+      .map(([dishId, quantity]) => ({
+        dishId: Number(dishId),
+        quantity: quantity as number,
+      }))
+      .filter(item => item.quantity > 0);
+
+    if (items.length > 0) {
+      syncMutation.mutate(items);
+    }
+  }, [cart, syncMutation]);
+
+  const clearCart = useCallback(() => {
+    if (syncTimeoutRef.current) {
+      clearTimeout(syncTimeoutRef.current);
+    }
     clearCartLocal();
     queryClient.setQueryData(CART_QUERY_KEY, {});
-  };
+  }, [queryClient]);
 
   return {
     getItemQuantity: (dishId: number) => cart[dishId] || 0,
@@ -63,10 +101,11 @@ export const useCart = () => {
     getCartItems: () =>
       Object.entries(cart).map(([dishId, quantity]) => ({
         dishId: Number(dishId),
-        quantity,
+        quantity: quantity as number,
       })),
-    syncCart,
+    forceSyncNow,
     clearCart,
-    isLoading: updateMutation.isPending || syncMutation.isPending,
+    isLoading: syncMutation.isPending,
+    hasPendingSync: !!syncTimeoutRef.current,
   };
 };

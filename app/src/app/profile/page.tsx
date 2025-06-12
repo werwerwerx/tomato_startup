@@ -20,7 +20,7 @@ import {
 import { SighOutButton } from "@/features/auth/sigh-out.button";
 import { ShoppingBagIcon } from "lucide-react";
 import { UserInfo } from "@/features/user/user-info";
-import { USER_PROFILE_NAV_ITEMS } from "@/features/user/user.profile-nav.constants";
+import { getUserProfileNavItems } from "@/features/user/user.profile-nav.constants";
 import {
   CardNavContainer,
   CardNavSection,
@@ -33,6 +33,8 @@ import {
   AccordionTrigger,
 } from "@/shared/components/ui-kit/accordion";
 import { UserAdress } from "@/features/user/adress/user-adress";
+import { ListFavorites } from "@/features/favorites/list-facorites";
+import { useFavorites } from "@/features/favorites/use-favorites";
 
 export interface IProfileProps {}
 
@@ -40,7 +42,11 @@ export default function ProfilePage(props: IProfileProps) {
   const session = useSession();
   const router = useRouter();
   const [notifications, setNotifications] = React.useState(true);
-
+  const {
+    serverFavoritesCount
+  } = useFavorites();
+  
+  const profileNavItems = getUserProfileNavItems(serverFavoritesCount);
   if (session.status === "unauthenticated") {
     router.push("/auth");
   }
@@ -61,7 +67,7 @@ export default function ProfilePage(props: IProfileProps) {
           </CardNavSection>
 
           <Accordion type="multiple" className="w-full">
-            {USER_PROFILE_NAV_ITEMS.map((item) => (
+            {profileNavItems.map((item) => (
               <AccordionItem
                 key={item.href}
                 value={item.href}
@@ -115,9 +121,7 @@ export default function ProfilePage(props: IProfileProps) {
                     </div>
                   )}
                   {item.label === "Избранное" && (
-                    <div className="text-foreground/80 w-full text-sm">
-                      Здесь будут ваши избранные блюда
-                    </div>
+                    <ListFavorites />
                   )}
                   {item.label === "Ваши заказы" && (
                     <div className="text-foreground/80 w-full text-sm">

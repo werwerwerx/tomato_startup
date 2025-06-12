@@ -1,10 +1,6 @@
 import { HeartIcon, SettingsIcon, ShoppingBagIcon } from "lucide-react";
 
-export const USER_PROFILE_NAV_ITEMS: {
-  icon: React.ReactNode;
-  label: string;
-  href: string;
-}[] = [
+export const getUserProfileNavItems = (favoritesCount: number = 0) => [
   {
     icon: <SettingsIcon className="h-4 w-4" />,
     label: "Настройки",
@@ -12,7 +8,7 @@ export const USER_PROFILE_NAV_ITEMS: {
   },
   {
     icon: <HeartIcon className="h-4 w-4" />,
-    label: "Избранное",
+    label: `Избранное${favoritesCount > 0 ? ` (${favoritesCount})` : ''}`,
     href: "/profile/#favorites",
   },
   {
@@ -21,3 +17,5 @@ export const USER_PROFILE_NAV_ITEMS: {
     href: "/profile/orders",
   },
 ];
+
+export const USER_PROFILE_NAV_ITEMS = getUserProfileNavItems();

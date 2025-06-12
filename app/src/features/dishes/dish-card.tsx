@@ -3,6 +3,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { DishPreview } from "./dishes.repository";
 import { AddToCartBtn } from "./dish.add-to-cart.btn";
+import { AddToFavoritesButton } from "./dish-add-to-favor.btn";
 
 // todo: make fugging some cool animations. card is important. people loving fugging card and touch it and shit. then they will buy stuff.
 export const DishCard = ({
@@ -55,7 +56,7 @@ export const DishCard = ({
         </div>
 
         <div className="mt-3 flex w-full flex-row items-center justify-start gap-2">
-          {/* it should not be here. TODO: remove, put it in the repo idk. i think we should put it in the create dish method. ridiculous...  */}
+          {/* it should not be here. TODO: remove, put it in the dish repo idk. i think we should put it in the create dish method. ridiculous...  */}
           {Math.random() > 0.5 && (
             <p className="text-xs font-bold text-neutral-300 line-through md:text-sm">
               {Math.floor(
@@ -70,7 +71,10 @@ export const DishCard = ({
         </div>
       </div>
 
-      {/* Кнопка добавления в корзину */}
+      <AddToFavoritesButton 
+        dishId={id} 
+        className="right-2 top-16 sm:right-2 sm:top-2"
+      />
       {addToCartBtn || <AddToCartBtn dishId={id} />}
     </div>
   );
