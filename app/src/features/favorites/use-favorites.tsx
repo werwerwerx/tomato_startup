@@ -5,7 +5,8 @@ const FAVORITES_KEY = "FAVORITES";
 const FAVORITES_QUERY_KEY = ["favorites"];
 const SERVER_FAVORITES_QUERY_KEY = ["server-favorites"];
 
-const getFavoritesLocal = () => JSON.parse(localStorage.getItem(FAVORITES_KEY) || "{}");
+const getFavoritesLocal = () =>
+  JSON.parse(localStorage.getItem(FAVORITES_KEY) || "{}");
 const saveFavoritesLocal = (favorites: Record<number, boolean>) =>
   localStorage.setItem(FAVORITES_KEY, JSON.stringify(favorites));
 const clearFavoritesLocal = () => localStorage.removeItem(FAVORITES_KEY);
@@ -21,7 +22,10 @@ interface ServerFavorite {
   };
 }
 
-const fetchServerFavorites = async (): Promise<{ favorites: ServerFavorite[]; count: number }> => {
+const fetchServerFavorites = async (): Promise<{
+  favorites: ServerFavorite[];
+  count: number;
+}> => {
   const response = await fetch("/api/user/favorites/get");
   if (!response.ok) {
     throw new Error("Failed to fetch server favorites");
@@ -85,7 +89,7 @@ export const useFavorites = () => {
     const localItems = Object.keys(favorites).map((dishId) => ({
       dishId: Number(dishId),
     }));
-    
+
     if (localItems.length > 0) {
       syncMutation.mutate(localItems);
     } else {
@@ -96,7 +100,7 @@ export const useFavorites = () => {
   const toggleFavorite = (dishId: number) => {
     const isFavorite = favorites[dishId] || false;
     const newFavorites = { ...favorites };
-    
+
     if (isFavorite) {
       delete newFavorites[dishId];
       removeMutation.mutate({ dishId });
@@ -130,17 +134,20 @@ export const useFavorites = () => {
       Object.keys(favorites).map((dishId) => ({
         dishId: Number(dishId),
       })),
-    
+
     // Серверные данные
     serverFavorites: serverFavorites?.favorites || [],
     serverFavoritesCount: serverFavorites?.count || 0,
-    
+
     // Методы синхронизации
     syncFavorites,
     clearFavorites,
     refetchServerFavorites,
-    
+
     // Состояния загрузки
-    isLoading: addMutation.isPending || removeMutation.isPending || syncMutation.isPending,
+    isLoading:
+      addMutation.isPending ||
+      removeMutation.isPending ||
+      syncMutation.isPending,
   };
 };

@@ -15,23 +15,20 @@ export async function POST(req: Request) {
     if (!Array.isArray(items)) {
       return NextResponse.json(
         { error: "Invalid data format. Expected array of items" },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
     const validItems = items
-      .filter(item => typeof item.dishId === "number")
-      .map(item => ({
+      .filter((item) => typeof item.dishId === "number")
+      .map((item) => ({
         id: crypto.randomUUID(),
         dishId: item.dishId,
         userId: session.user.id,
       }));
 
     if (validItems.length > 0) {
-      await db
-        .insert(favorite)
-        .values(validItems)
-        .onConflictDoNothing();
+      await db.insert(favorite).values(validItems).onConflictDoNothing();
     }
 
     return NextResponse.json({
@@ -43,7 +40,7 @@ export async function POST(req: Request) {
     console.error("Error syncing favorites:", error);
     return NextResponse.json(
       { error: "Internal server error" },
-      { status: 500 }
+      { status: 500 },
     );
   }
-} 
+}

@@ -6,7 +6,7 @@ import { NextResponse } from "next/server";
 export async function POST(req: Request) {
   const { dishId } = await req.json();
   const session = await auth();
-  
+
   if (!session?.user?.id) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
@@ -14,7 +14,7 @@ export async function POST(req: Request) {
   if (!dishId || typeof dishId !== "number") {
     return NextResponse.json(
       { error: "dishId is required and must be a number" },
-      { status: 400 }
+      { status: 400 },
     );
   }
 
@@ -28,4 +28,4 @@ export async function POST(req: Request) {
     .onConflictDoNothing();
 
   return NextResponse.json({ message: "Favorite added", dishId });
-} 
+}

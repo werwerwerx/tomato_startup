@@ -1,6 +1,6 @@
-import { useFavorites } from "./use-favorites"
-import { Heart, Trash2, Loader2 } from "lucide-react"
-import { Button } from "@/shared/components/ui-kit/button"
+import { useFavorites } from "./use-favorites";
+import { Heart, Trash2, Loader2 } from "lucide-react";
+import { Button } from "@/shared/components/ui-kit/button";
 
 export const ListFavorites = () => {
   const {
@@ -8,17 +8,17 @@ export const ListFavorites = () => {
     serverFavoritesCount,
     toggleFavorite,
     clearFavorites,
-    isLoading
+    isLoading,
   } = useFavorites();
 
-  if (serverFavoritesCount === 0) {
+  if (!serverFavoritesCount) {
     return (
       <div className="flex flex-col items-center justify-center py-12 text-center">
-        <Heart className="h-16 w-16 text-gray-300 mb-4" />
-        <h3 className="text-lg font-semibold text-gray-600 mb-2">
+        <Heart className="mb-4 h-16 w-16 text-gray-300" />
+        <h3 className="mb-2 text-lg font-semibold text-gray-600">
           Нет избранных блюд
         </h3>
-        <p className="text-sm text-gray-500 max-w-sm">
+        <p className="max-w-sm text-sm text-gray-500">
           Добавьте блюда в избранное, нажав на сердечко рядом с блюдом
         </p>
       </div>
@@ -28,9 +28,6 @@ export const ListFavorites = () => {
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
-        <h3 className="text-lg font-semibold">
-          Избранное ({serverFavoritesCount})
-        </h3>
         {serverFavoritesCount > 0 && (
           <Button
             variant="outline"
@@ -46,9 +43,9 @@ export const ListFavorites = () => {
       </div>
 
       <div className="grid gap-4">
-        {serverFavorites.map(({ dishId, dish }) => (
+        {serverFavorites.map(({ dishId, dish }, index) => (
           <FavoriteItem
-            key={dishId}
+            key={`favorite-${dishId}-${index}`}
             dish={dish}
             onRemove={() => toggleFavorite(dishId)}
             isLoading={isLoading}
@@ -73,40 +70,38 @@ interface FavoriteItemProps {
 
 const FavoriteItem = ({ dish, onRemove, isLoading }: FavoriteItemProps) => {
   return (
-    <div className="flex items-center justify-between p-4 bg-white rounded-lg border border-gray-200 hover:shadow-sm transition-shadow">
+    <div className="flex items-center justify-between rounded-lg border border-gray-200 bg-white p-4 transition-shadow hover:shadow-sm">
       <div className="flex items-center gap-4">
-        <div className="w-16 h-16 bg-gray-100 rounded-lg overflow-hidden">
+        <div className="h-16 w-16 overflow-hidden rounded-lg bg-gray-100">
           {dish.image ? (
-            <img 
-              src={dish.image} 
+            <img
+              src={dish.image}
               alt={dish.name}
-              className="w-full h-full object-cover"
+              className="h-full w-full object-cover"
             />
           ) : (
-            <div className="w-full h-full flex items-center justify-center">
+            <div className="flex h-full w-full items-center justify-center">
               <span className="text-2xl">🍽️</span>
             </div>
           )}
         </div>
         <div className="flex-1">
-          <h4 className="font-medium text-gray-900">
-            {dish.name}
-          </h4>
-          <p className="text-sm text-gray-500 line-clamp-2">
+          <h4 className="font-medium text-gray-900">{dish.name}</h4>
+          <p className="line-clamp-2 text-sm text-gray-500">
             {dish.description}
           </p>
-          <p className="text-sm font-semibold text-emerald-600 mt-1">
+          <p className="mt-1 text-sm font-semibold text-emerald-600">
             {dish.price}₽
           </p>
         </div>
       </div>
-      
+
       <Button
         variant="ghost"
         size="sm"
         onClick={onRemove}
         disabled={isLoading}
-        className="text-red-500 hover:text-red-600 hover:bg-red-50"
+        className="text-red-500 hover:bg-red-50 hover:text-red-600"
       >
         <Heart className="h-5 w-5 fill-current" />
       </Button>

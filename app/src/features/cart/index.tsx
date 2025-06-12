@@ -5,9 +5,10 @@ import { useState } from "react";
 export const CartOverlayFeature = () => {};
 
 const CartOverlayContainer = ({ children }: { children: React.ReactNode }) => {
-  return <div className="relative h-[70vw] -translate-y-[50vh]">{children}</div>;
+  return (
+    <div className="relative h-[70vw] -translate-y-[50vh]">{children}</div>
+  );
 };
-
 
 const CartOverlayTrigger = ({ children }: { children: React.ReactNode }) => {
   return (

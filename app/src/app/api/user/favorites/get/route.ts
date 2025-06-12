@@ -12,8 +12,7 @@ export async function GET() {
     }
 
     const userFavorites = await db
-      .select({
-        id: favorite.id,
+      .selectDistinct({
         dishId: favorite.dishId,
         dish: {
           id: dishes_table.id,
@@ -21,7 +20,7 @@ export async function GET() {
           description: dishes_table.description,
           price: dishes_table.price,
           image: img_table.url,
-        }
+        },
       })
       .from(favorite)
       .leftJoin(dishes_table, eq(favorite.dishId, dishes_table.id))
@@ -29,10 +28,10 @@ export async function GET() {
       .where(eq(favorite.userId, session.user.id));
 
     const formattedFavorites = userFavorites
-      .filter(fav => fav.dish) // только те, у которых блюдо существует
-      .map(fav => ({
+      .filter((fav) => fav.dish) // только те, у которых блюдо существует
+      .map((fav) => ({
         dishId: fav.dishId,
-        dish: fav.dish
+        dish: fav.dish,
       }));
 
     return NextResponse.json({
@@ -44,7 +43,7 @@ export async function GET() {
     console.error("Error fetching favorites:", error);
     return NextResponse.json(
       { error: "Internal server error" },
-      { status: 500 }
+      { status: 500 },
     );
   }
-} 
+}

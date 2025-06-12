@@ -1,30 +1,20 @@
 "use client";
 
-import { Button } from "@/shared/components/ui-kit/button";
 import { signOut, useSession } from "next-auth/react";
-import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { UserAvatar } from "@/features/user/user-avatar";
 
 import * as React from "react";
 import { cn } from "@/shared/lib/utils";
 import {
-  ArrowRightIcon,
-  HeartIcon,
-  LogOutIcon,
-  SettingsIcon,
-  MapPinIcon,
   BellIcon,
-  EditIcon,
+  ClipboardListIcon,
 } from "lucide-react";
 import { SighOutButton } from "@/features/auth/sigh-out.button";
-import { ShoppingBagIcon } from "lucide-react";
 import { UserInfo } from "@/features/user/user-info";
 import { getUserProfileNavItems } from "@/features/user/user.profile-nav.constants";
 import {
   CardNavContainer,
   CardNavSection,
-  CardNavRow,
 } from "@/shared/components/card-nav";
 import {
   Accordion,
@@ -33,8 +23,10 @@ import {
   AccordionTrigger,
 } from "@/shared/components/ui-kit/accordion";
 import { UserAdress } from "@/features/user/adress/user-adress";
-import { ListFavorites } from "@/features/favorites/list-facorites";
+import { ListFavorites } from "@/features/favorites/list-favorites";
 import { useFavorites } from "@/features/favorites/use-favorites";
+import { ListCart } from "@/features/cart/list-cart";
+import { useCart } from "@/features/cart/hooks/use-cart";
 
 export interface IProfileProps {}
 
@@ -42,11 +34,13 @@ export default function ProfilePage(props: IProfileProps) {
   const session = useSession();
   const router = useRouter();
   const [notifications, setNotifications] = React.useState(true);
-  const {
-    serverFavoritesCount
-  } = useFavorites();
+  const { serverFavoritesCount } = useFavorites();
+  const { getCartItems } = useCart();
   
-  const profileNavItems = getUserProfileNavItems(serverFavoritesCount);
+  const cartItems = getCartItems();
+  const cartItemsCount = cartItems.reduce((sum, item) => sum + item.quantity, 0);
+
+  const profileNavItems = getUserProfileNavItems(serverFavoritesCount, cartItemsCount);
   if (session.status === "unauthenticated") {
     router.push("/auth");
   }
@@ -120,12 +114,17 @@ export default function ProfilePage(props: IProfileProps) {
                       </div>
                     </div>
                   )}
-                  {item.label === "Избранное" && (
-                    <ListFavorites />
-                  )}
+                  {item.label.startsWith("Избранное") && <ListFavorites />}
+                  {item.label.startsWith("Корзина") && <ListCart />}
                   {item.label === "Ваши заказы" && (
-                    <div className="text-foreground/80 w-full text-sm">
-                      Здесь будет история ваших заказов
+                    <div className="flex flex-col items-center justify-center py-12 text-center">
+                      <ClipboardListIcon className="mb-4 h-16 w-16 text-gray-300" />
+                      <h3 className="mb-2 text-lg font-semibold text-gray-600">
+                        Вы пока не делали заказы
+                      </h3>
+                      <p className="max-w-sm text-sm text-gray-500">
+                        Добавьте блюда в корзину и оформите ваш первый заказ
+                      </p>
                     </div>
                   )}
                 </AccordionContent>

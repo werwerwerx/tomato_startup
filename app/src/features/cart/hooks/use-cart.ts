@@ -36,14 +36,14 @@ export const useCart = () => {
     if (syncTimeoutRef.current) {
       clearTimeout(syncTimeoutRef.current);
     }
-    
+
     syncTimeoutRef.current = setTimeout(() => {
       const items = Object.entries(cart)
         .map(([dishId, quantity]) => ({
           dishId: Number(dishId),
           quantity: quantity as number,
         }))
-        .filter(item => item.quantity > 0);
+        .filter((item) => item.quantity > 0);
 
       if (items.length > 0 && !pendingSyncRef.current) {
         syncMutation.mutate(items);
@@ -59,15 +59,18 @@ export const useCart = () => {
     };
   }, []);
 
-  const updateQuantity = useCallback((dishId: number, quantity: number) => {
-    const newCart = { ...cart, [dishId]: quantity };
-    if (quantity === 0) delete newCart[dishId];
+  const updateQuantity = useCallback(
+    (dishId: number, quantity: number) => {
+      const newCart = { ...cart, [dishId]: quantity };
+      if (quantity === 0) delete newCart[dishId];
 
-    saveCartLocal(newCart);
-    queryClient.setQueryData(CART_QUERY_KEY, newCart);
-    
-    debouncedSync();
-  }, [cart, queryClient, debouncedSync]);
+      saveCartLocal(newCart);
+      queryClient.setQueryData(CART_QUERY_KEY, newCart);
+
+      debouncedSync();
+    },
+    [cart, queryClient, debouncedSync],
+  );
 
   const forceSyncNow = useCallback(() => {
     if (syncTimeoutRef.current) {
@@ -80,7 +83,7 @@ export const useCart = () => {
         dishId: Number(dishId),
         quantity: quantity as number,
       }))
-      .filter(item => item.quantity > 0);
+      .filter((item) => item.quantity > 0);
 
     if (items.length > 0) {
       syncMutation.mutate(items);

@@ -71,9 +71,9 @@ export const DishCard = ({
         </div>
       </div>
 
-      <AddToFavoritesButton 
-        dishId={id} 
-        className="right-2 top-16 sm:right-2 sm:top-2"
+      <AddToFavoritesButton
+        dishId={id}
+        className="top-16 right-2 sm:top-2 sm:right-2"
       />
       {addToCartBtn || <AddToCartBtn dishId={id} />}
     </div>
